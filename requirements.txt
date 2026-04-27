@@ -3,3 +3,4 @@ uvicorn[standard]
 sqlalchemy
 jinja2==3.1.4
 pydantic
+python-multipart

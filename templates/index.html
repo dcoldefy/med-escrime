@@ -13,119 +13,423 @@
 </head>
 <body>
 
-  <!-- Logo escrimeur (pictogramme olympique) — défini une fois, réutilisé via <use> -->
-  <svg style="display:none" xmlns="http://www.w3.org/2000/svg">
-    <symbol id="ico-fencer" viewBox="0 0 960 960">
-      <path d="M 0.00 841.49 L 0.00 776.38 L 7.15 765.94 C39.79,718.25 73.86,673.71 125.95,610.60 C137.25,596.91 157.19,572.61 170.26,556.60 C200.89,519.10 203.21,516.50 209.36,512.94 C221.32,506.03 232.53,505.29 261.65,509.50 C330.60,519.48 400.60,545.41 442.65,576.55 C453.07,584.26 468.39,599.81 474.22,608.58 C489.71,631.88 492.08,659.90 481.29,692.35 C477.70,703.16 465.64,728.91 458.14,741.77 C452.60,751.27 402.42,839.60 389.27,863.00 C377.11,884.64 375.49,886.28 370.25,882.31 C367.70,880.37 367.52,879.76 367.71,873.73 C368.37,853.36 382.44,787.76 399.55,725.27 C407.66,695.65 411.41,676.04 410.75,666.77 C410.49,663.06 409.73,659.38 409.07,658.59 C407.59,656.80 394.14,651.11 379.00,645.88 C364.59,640.90 348.36,636.24 311.50,626.49 C295.55,622.28 274.77,616.62 265.31,613.91 C255.86,611.21 247.28,609.00 246.25,609.00 C245.03,609.00 242.45,611.75 238.96,616.75 C215.61,650.21 188.24,677.65 118.42,737.65 C84.28,766.99 76.01,774.21 31.75,813.39 L 0.00 841.49 ZM 960.00 534.01 L 960.00 546.00 L 742.22 546.00 L 741.54 549.75 C741.16,551.81 739.34,556.68 737.48,560.56 C730.64,574.88 716.19,585.33 700.25,587.48 L 695.00 588.19 L 695.00 548.70 L 686.75 549.36 C623.39,554.38 570.48,546.72 532.01,526.96 C512.07,516.71 493.97,500.85 482.60,483.63 C475.88,473.47 459.69,443.82 458.01,438.61 C456.02,432.45 457.15,421.13 460.29,415.77 C467.90,402.78 483.29,396.33 497.09,400.34 C507.64,403.41 513.68,410.26 532.41,440.43 C548.87,466.94 556.14,475.32 571.90,485.96 C588.62,497.25 625.12,511.30 660.00,519.88 C681.69,525.22 693.87,527.79 694.50,527.17 C694.77,526.89 695.00,518.87 695.00,509.33 L 695.00 492.00 L 697.45 492.00 C702.24,492.00 710.59,494.29 716.38,497.20 C727.90,502.99 736.53,513.41 740.46,526.28 L 742.66 533.50 L 960.00 534.01 ZM 354.12 353.46 C347.60,355.76 340.59,355.35 331.50,352.13 C277.35,332.99 238.85,296.71 230.48,256.93 C228.61,248.02 228.58,231.90 230.41,221.48 C235.87,190.49 248.91,162.91 281.47,113.50 C303.16,80.59 307.47,75.65 311.51,79.01 C311.85,79.29 312.15,79.53 312.39,79.83 C314.12,81.95 312.57,86.75 298.94,128.87 L 298.57 130.00 C289.95,156.65 282.82,184.40 280.52,200.30 C278.25,215.93 278.38,231.36 280.85,237.84 C287.47,255.27 296.06,262.22 339.85,285.58 C364.04,298.48 368.81,302.10 372.51,310.34 C375.90,317.91 376.41,322.84 374.55,330.18 C371.70,341.39 364.24,349.90 354.12,353.46 ZM 480.00 202.00 L 480.00 339.00 L 475.25 338.92 C458.54,338.62 437.20,326.99 425.87,312.00 C420.80,305.29 415.59,294.54 413.53,286.54 C411.54,278.79 411.53,261.28 413.51,253.46 C414.34,250.18 416.89,243.68 419.18,239.00 C425.03,227.04 436.94,215.16 449.00,209.24 C458.31,204.67 467.88,202.04 475.25,202.01 ZM 510.96 331.80 C506.27,334.11 501.65,336.00 500.71,336.00 C499.11,336.00 499.00,331.67 499.00,270.50 C499.00,213.68 499.19,205.00 500.46,205.00 C501.27,205.00 504.19,205.89 506.97,206.99 C533.24,217.34 550.51,245.29 548.68,274.50 C547.56,292.36 541.60,305.38 528.50,318.55 C521.19,325.90 517.90,328.38 510.96,331.80 Z"/>
-    </symbol>
-  </svg>
+<!-- ═══ Logo (symbol SVG réutilisable) ═══ -->
+<svg style="display:none" xmlns="http://www.w3.org/2000/svg">
+  <symbol id="ico-fencer" viewBox="0 0 960 960">
+    <path d="M 0.00 841.49 L 0.00 776.38 L 7.15 765.94 C39.79,718.25 73.86,673.71 125.95,610.60 C137.25,596.91 157.19,572.61 170.26,556.60 C200.89,519.10 203.21,516.50 209.36,512.94 C221.32,506.03 232.53,505.29 261.65,509.50 C330.60,519.48 400.60,545.41 442.65,576.55 C453.07,584.26 468.39,599.81 474.22,608.58 C489.71,631.88 492.08,659.90 481.29,692.35 C477.70,703.16 465.64,728.91 458.14,741.77 C452.60,751.27 402.42,839.60 389.27,863.00 C377.11,884.64 375.49,886.28 370.25,882.31 C367.70,880.37 367.52,879.76 367.71,873.73 C368.37,853.36 382.44,787.76 399.55,725.27 C407.66,695.65 411.41,676.04 410.75,666.77 C410.49,663.06 409.73,659.38 409.07,658.59 C407.59,656.80 394.14,651.11 379.00,645.88 C364.59,640.90 348.36,636.24 311.50,626.49 C295.55,622.28 274.77,616.62 265.31,613.91 C255.86,611.21 247.28,609.00 246.25,609.00 C245.03,609.00 242.45,611.75 238.96,616.75 C215.61,650.21 188.24,677.65 118.42,737.65 C84.28,766.99 76.01,774.21 31.75,813.39 L 0.00 841.49 ZM 960.00 534.01 L 960.00 546.00 L 742.22 546.00 L 741.54 549.75 C741.16,551.81 739.34,556.68 737.48,560.56 C730.64,574.88 716.19,585.33 700.25,587.48 L 695.00 588.19 L 695.00 548.70 L 686.75 549.36 C623.39,554.38 570.48,546.72 532.01,526.96 C512.07,516.71 493.97,500.85 482.60,483.63 C475.88,473.47 459.69,443.82 458.01,438.61 C456.02,432.45 457.15,421.13 460.29,415.77 C467.90,402.78 483.29,396.33 497.09,400.34 C507.64,403.41 513.68,410.26 532.41,440.43 C548.87,466.94 556.14,475.32 571.90,485.96 C588.62,497.25 625.12,511.30 660.00,519.88 C681.69,525.22 693.87,527.79 694.50,527.17 C694.77,526.89 695.00,518.87 695.00,509.33 L 695.00 492.00 L 697.45 492.00 C702.24,492.00 710.59,494.29 716.38,497.20 C727.90,502.99 736.53,513.41 740.46,526.28 L 742.66 533.50 L 960.00 534.01 ZM 354.12 353.46 C347.60,355.76 340.59,355.35 331.50,352.13 C277.35,332.99 238.85,296.71 230.48,256.93 C228.61,248.02 228.58,231.90 230.41,221.48 C235.87,190.49 248.91,162.91 281.47,113.50 C303.16,80.59 307.47,75.65 311.51,79.01 C311.85,79.29 312.15,79.53 312.39,79.83 C314.12,81.95 312.57,86.75 298.94,128.87 L 298.57 130.00 C289.95,156.65 282.82,184.40 280.52,200.30 C278.25,215.93 278.38,231.36 280.85,237.84 C287.47,255.27 296.06,262.22 339.85,285.58 C364.04,298.48 368.81,302.10 372.51,310.34 C375.90,317.91 376.41,322.84 374.55,330.18 C371.70,341.39 364.24,349.90 354.12,353.46 ZM 480.00 202.00 L 480.00 339.00 L 475.25 338.92 C458.54,338.62 437.20,326.99 425.87,312.00 C420.80,305.29 415.59,294.54 413.53,286.54 C411.54,278.79 411.53,261.28 413.51,253.46 C414.34,250.18 416.89,243.68 419.18,239.00 C425.03,227.04 436.94,215.16 449.00,209.24 C458.31,204.67 467.88,202.04 475.25,202.01 ZM 510.96 331.80 C506.27,334.11 501.65,336.00 500.71,336.00 C499.11,336.00 499.00,331.67 499.00,270.50 C499.00,213.68 499.19,205.00 500.46,205.00 C501.27,205.00 504.19,205.89 506.97,206.99 C533.24,217.34 550.51,245.29 548.68,274.50 C547.56,292.36 541.60,305.38 528.50,318.55 C521.19,325.90 517.90,328.38 510.96,331.80 Z"/>
+  </symbol>
+</svg>
 
-  <header>
-    <div class="logo-icon">
-      <svg fill="currentColor"><use href="#ico-fencer"/></svg>
+<!-- ═══ Header ═══ -->
+<header>
+  <div class="logo-icon">
+    <svg fill="currentColor"><use href="#ico-fencer"/></svg>
+  </div>
+  <div class="header-text">
+    <div class="header-title">MED</div>
+    <div class="header-sub">My Escrime Data</div>
+  </div>
+  <div class="header-date" id="headerDate"></div>
+</header>
+
+<!-- ═══ Onglets ═══ -->
+<nav class="tab-bar">
+  <button class="tab active" data-tab="competitions">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="8,21 12,17 16,21"/><line x1="12" y1="17" x2="12" y2="11"/>
+      <path d="M7 4H4v3c0 2.2 1.8 4 4 4"/><path d="M17 4h3v3c0 2.2-1.8 4-4 4"/>
+      <path d="M7 4h10v5a5 5 0 0 1-10 0V4z"/>
+    </svg>
+    Compétitions
+  </button>
+  <button class="tab" data-tab="entrainement">
+    <svg viewBox="0 0 24 24" fill="currentColor">
+      <path d="M20.57 14.86L22 13.43 20.57 12 17 15.57 8.43 7 12 3.43 10.57 2 9.14 3.43 7.71 2 5.57 4.14 4.14 2.71 2.71 4.14l1.43 1.43L2 7.71l1.43 1.43L2 10.57 3.43 12 7 8.43 15.57 17 12 20.57 13.43 22l1.43-1.43L16.29 22l2.14-2.14 1.43 1.43 1.43-1.43-1.43-1.43L22 16.29z"/>
+    </svg>
+    Entraînement
+  </button>
+  <button class="tab" data-tab="historique">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="12,8 12,12 14,14"/>
+      <path d="M3.05 11a9 9 0 1 1 .5 4"/>
+      <polyline points="3,16 3,11 8,11"/>
+    </svg>
+    Historique
+  </button>
+</nav>
+
+<!-- ═══════════════════════════════════════════════════════
+     COMPÉTITIONS
+════════════════════════════════════════════════════════ -->
+<section id="tab-competitions" class="tab-content active">
+
+  <!-- Liste des compétitions -->
+  <div id="screen-comp-list">
+    <div class="screen-header">
+      <h2 class="screen-title">Compétitions</h2>
+      <button class="btn-add" id="btnNouvelleComp">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Nouvelle
+      </button>
     </div>
-    <div class="header-text">
-      <div class="header-title">MED</div>
-      <div class="header-sub">My Escrime Data</div>
+    <div class="card-list" id="listComps"><p class="empty-msg">Chargement…</p></div>
+  </div>
+
+  <!-- Formulaire nouvelle compétition -->
+  <div id="screen-comp-form" class="hidden">
+    <div class="screen-header">
+      <button class="btn-back" onclick="showScreen('comp','list')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15,18 9,12 15,6"/></svg>
+      </button>
+      <h2 class="screen-title">Nouvelle compétition</h2>
     </div>
-    <div class="header-date" id="headerDate"></div>
-  </header>
-
-  <nav class="tab-bar">
-    <button class="tab active" data-tab="journal">
-      <!-- Journal : trait fin -->
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-        <polyline points="14,2 14,8 20,8"/>
-        <line x1="16" y1="13" x2="8" y2="13"/>
-        <line x1="16" y1="17" x2="8" y2="17"/>
-      </svg>
-      Journal
-    </button>
-    <button class="tab" data-tab="historique">
-      <!-- Historique : trait fin -->
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-        <polyline points="12,8 12,12 14,14"/>
-        <path d="M3.05 11a9 9 0 1 1 .5 4"/>
-        <polyline points="3,16 3,11 8,11"/>
-      </svg>
-      Historique
-    </button>
-  </nav>
-
-  <!-- ===================== JOURNAL ===================== -->
-  <section id="tab-journal" class="tab-content active">
     <div class="form-card">
-
-      <div class="card-title">
-        <!-- Horloge : trait fin -->
+      <div class="field-group">
+        <label class="field-label">Nom de la compétition</label>
+        <input type="text" id="compNom" class="field-input" placeholder="Championnat de Paris…" />
+      </div>
+      <div class="field-row">
+        <div class="field-group">
+          <label class="field-label">Date</label>
+          <input type="date" id="compDate" class="field-input" />
+        </div>
+        <div class="field-group">
+          <label class="field-label">Arme</label>
+          <select id="compArme" class="field-input">
+            <option value="epee" selected>Épée</option>
+            <option value="fleuret">Fleuret</option>
+            <option value="sabre">Sabre</option>
+          </select>
+        </div>
+      </div>
+      <div class="field-group">
+        <label class="field-label">Niveau</label>
+        <div class="radio-row" id="compNiveau">
+          <button class="radio-btn active" data-val="regional">Régional</button>
+          <button class="radio-btn" data-val="national">National</button>
+          <button class="radio-btn" data-val="international">International</button>
+          <button class="radio-btn" data-val="olympique">Olympique</button>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field-group">
+          <label class="field-label">Ville</label>
+          <input type="text" id="compVille" class="field-input" placeholder="Paris" />
+        </div>
+        <div class="field-group">
+          <label class="field-label">Lieu / Salle</label>
+          <input type="text" id="compLieu" class="field-input" placeholder="Gymnase Japy" />
+        </div>
+      </div>
+      <div class="field-group">
+        <label class="field-label">État de forme</label>
+        <div class="notes-area">
+          <textarea id="compForme" class="field-textarea" placeholder="Comment vous sentez-vous aujourd'hui ?"></textarea>
+          <button class="mic-btn" id="micForme" title="Dicter">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="9" y="2" width="6" height="11" rx="3"/>
+              <path d="M19 10a7 7 0 0 1-14 0"/>
+              <line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field-group">
+          <label class="field-label">Poule</label>
+          <div class="toggle-row" id="compPoule">
+            <button class="toggle-btn active" data-val="true">Oui</button>
+            <button class="toggle-btn" data-val="false">Non</button>
+          </div>
+        </div>
+        <div class="field-group">
+          <label class="field-label">Tableau</label>
+          <div class="toggle-row" id="compTableau">
+            <button class="toggle-btn active" data-val="true">Oui</button>
+            <button class="toggle-btn" data-val="false">Non</button>
+          </div>
+        </div>
+      </div>
+      <button class="save-btn" id="btnSaveComp">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/>
+          <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+          <polyline points="17,21 17,13 7,13"/><polyline points="7,3 7,8 15,8"/>
         </svg>
+        Créer la compétition
+      </button>
+      <div class="feedback" id="feedbackComp"></div>
+    </div>
+  </div>
+
+  <!-- Setup poule : nombre de tireurs -->
+  <div id="screen-comp-poule-setup" class="hidden">
+    <div class="screen-header">
+      <h2 class="screen-title" id="pouleSetupTitle">Poule</h2>
+    </div>
+    <div class="form-card">
+      <div class="step-info">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
+          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+        Combien de tireurs dans votre poule ?
+      </div>
+      <div class="number-picker">
+        <button class="num-btn" id="btnPouleMin">−</button>
+        <span class="num-val" id="pouleNbTireurs">6</span>
+        <button class="num-btn" id="btnPouleMax">+</button>
+      </div>
+      <p class="num-hint" id="pouleHint">5 assaults à enregistrer</p>
+      <button class="save-btn" id="btnStartPoule">Commencer la poule</button>
+    </div>
+  </div>
+
+  <!-- Assault de poule -->
+  <div id="screen-comp-poule-assault" class="hidden">
+    <div class="screen-header">
+      <h2 class="screen-title" id="pouleAssaultTitle">Poule — Assault 1/5</h2>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="pouleProgress"></div></div>
+    <div class="form-card">
+      <div class="field-group">
+        <label class="field-label">Adversaire <span class="opt">(optionnel)</span></label>
+        <input type="text" id="pouleAdv" class="field-input" placeholder="Nom de l'adversaire" />
+      </div>
+      <div class="score-row">
+        <div class="field-group score-field">
+          <label class="field-label">Votre score <span class="opt">(opt.)</span></label>
+          <input type="number" id="pouleScoreMoi" class="field-input score-input" min="0" max="15" placeholder="—" />
+        </div>
+        <div class="score-sep">–</div>
+        <div class="field-group score-field">
+          <label class="field-label">Score adversaire <span class="opt">(opt.)</span></label>
+          <input type="number" id="pouleScoreAdv" class="field-input score-input" min="0" max="15" placeholder="—" />
+        </div>
+      </div>
+      <div class="field-group">
+        <label class="field-label">Commentaires <span class="opt">(optionnel)</span></label>
+        <div class="notes-area">
+          <textarea id="pouleCommentaires" class="field-textarea" placeholder="Notes sur cet assault…"></textarea>
+          <button class="mic-btn" id="micPoule" title="Dicter">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="9" y="2" width="6" height="11" rx="3"/>
+              <path d="M19 10a7 7 0 0 1-14 0"/>
+              <line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn-secondary" id="btnPouleSkip">Passer</button>
+        <button class="save-btn flex-1" id="btnPouleSave">Enregistrer →</button>
+      </div>
+      <div class="feedback" id="feedbackPoule"></div>
+    </div>
+  </div>
+
+  <!-- Fin de poule -->
+  <div id="screen-comp-poule-end" class="hidden">
+    <div class="screen-header">
+      <h2 class="screen-title">Fin de poule</h2>
+    </div>
+    <div class="form-card">
+      <div class="step-done">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="36" height="36">
+          <circle cx="12" cy="12" r="10"/><polyline points="9,12 11,14 15,10"/>
+        </svg>
+        <p>Poule terminée !</p>
+      </div>
+
+      <div class="photo-upload-zone" id="photoPouleZone">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="28" height="28">
+          <rect x="3" y="3" width="18" height="18" rx="2"/>
+          <circle cx="8.5" cy="8.5" r="1.5"/>
+          <polyline points="21,15 16,10 5,21"/>
+        </svg>
+        <p>Photo de la feuille de poule <span class="opt">(optionnel)</span></p>
+        <input type="file" id="photoPouleInput" accept="image/*" capture="environment" style="display:none" />
+        <button class="btn-photo" onclick="document.getElementById('photoPouleInput').click()">Prendre / Choisir une photo</button>
+        <p class="photo-status" id="photoPouleStatus"></p>
+      </div>
+
+      <div class="field-group" style="margin-top:16px">
+        <label class="field-label">Êtes-vous qualifié pour le tableau ?</label>
+        <div class="toggle-row" id="qualifToggle">
+          <button class="toggle-btn" data-val="true">Oui, qualifié</button>
+          <button class="toggle-btn" data-val="false">Non, éliminé</button>
+        </div>
+      </div>
+      <button class="save-btn" id="btnPouleEndConfirm" style="margin-top:14px">Confirmer</button>
+    </div>
+  </div>
+
+  <!-- Setup tableau -->
+  <div id="screen-comp-tableau-setup" class="hidden">
+    <div class="screen-header">
+      <h2 class="screen-title" id="tableauSetupTitle">Tableau</h2>
+    </div>
+    <div class="form-card">
+      <div class="step-info">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
+          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+        Dans quel tableau êtes-vous engagé ?
+      </div>
+      <div class="radio-row wrap" id="tableauSizeSelect">
+        <button class="radio-btn" data-val="256">T256</button>
+        <button class="radio-btn" data-val="128">T128</button>
+        <button class="radio-btn active" data-val="64">T64</button>
+        <button class="radio-btn" data-val="32">T32</button>
+        <button class="radio-btn" data-val="16">T16</button>
+        <button class="radio-btn" data-val="8">T8</button>
+        <button class="radio-btn" data-val="4">T4</button>
+      </div>
+      <button class="save-btn" id="btnStartTableau">Commencer le tableau</button>
+    </div>
+  </div>
+
+  <!-- Assault de tableau -->
+  <div id="screen-comp-tableau-assault" class="hidden">
+    <div class="screen-header">
+      <h2 class="screen-title" id="tableauAssaultTitle">Tableau de 64</h2>
+    </div>
+    <div class="form-card">
+      <div class="tour-badge" id="tourBadge">Tour de 64</div>
+      <div class="field-group">
+        <label class="field-label">Adversaire <span class="opt">(optionnel)</span></label>
+        <input type="text" id="tableauAdv" class="field-input" placeholder="Nom de l'adversaire" />
+      </div>
+      <div class="score-row">
+        <div class="field-group score-field">
+          <label class="field-label">Votre score <span class="opt">(opt.)</span></label>
+          <input type="number" id="tableauScoreMoi" class="field-input score-input" min="0" max="15" placeholder="—" />
+        </div>
+        <div class="score-sep">–</div>
+        <div class="field-group score-field">
+          <label class="field-label">Score adversaire <span class="opt">(opt.)</span></label>
+          <input type="number" id="tableauScoreAdv" class="field-input score-input" min="0" max="15" placeholder="—" />
+        </div>
+      </div>
+      <div class="field-group">
+        <label class="field-label">Commentaires <span class="opt">(optionnel)</span></label>
+        <div class="notes-area">
+          <textarea id="tableauCommentaires" class="field-textarea" placeholder="Notes sur cet assault…"></textarea>
+          <button class="mic-btn" id="micTableau" title="Dicter">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="9" y="2" width="6" height="11" rx="3"/>
+              <path d="M19 10a7 7 0 0 1-14 0"/>
+              <line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn-defeat" id="btnDefaite">Défaite</button>
+        <button class="btn-victory" id="btnVictoire">Victoire →</button>
+      </div>
+      <button class="btn-correct" id="btnCorrigerTour">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="14" height="14">
+          <polyline points="1,4 1,10 7,10"/><path d="M3.51 15a9 9 0 1 0 .49-3.51"/>
+        </svg>
+        Corriger le tour
+      </button>
+      <div class="feedback" id="feedbackTableau"></div>
+    </div>
+  </div>
+
+  <!-- Fin de compétition -->
+  <div id="screen-comp-end" class="hidden">
+    <div class="screen-header">
+      <h2 class="screen-title">Fin de compétition</h2>
+    </div>
+    <div class="form-card">
+      <div class="step-done" id="compEndIcon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="36" height="36">
+          <circle cx="12" cy="12" r="10"/><polyline points="9,12 11,14 15,10"/>
+        </svg>
+        <p id="compEndMsg">Compétition terminée !</p>
+      </div>
+
+      <div class="photo-upload-zone" id="photoTableauZone">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="28" height="28">
+          <rect x="3" y="3" width="18" height="18" rx="2"/>
+          <circle cx="8.5" cy="8.5" r="1.5"/>
+          <polyline points="21,15 16,10 5,21"/>
+        </svg>
+        <p>Photo du tableau <span class="opt">(optionnel)</span></p>
+        <input type="file" id="photoTableauInput" accept="image/*" capture="environment" style="display:none" />
+        <button class="btn-photo" onclick="document.getElementById('photoTableauInput').click()">Prendre / Choisir une photo</button>
+        <p class="photo-status" id="photoTableauStatus"></p>
+      </div>
+
+      <button class="save-btn" id="btnCompEndDone" style="margin-top:14px">Terminer</button>
+    </div>
+  </div>
+
+</section>
+
+<!-- ═══════════════════════════════════════════════════════
+     ENTRAÎNEMENT
+════════════════════════════════════════════════════════ -->
+<section id="tab-entrainement" class="tab-content hidden">
+
+  <div id="screen-entr-list">
+    <div class="screen-header">
+      <h2 class="screen-title">Entraînement</h2>
+      <button class="btn-add" id="btnNouvelEntr">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         Nouvel assault
-      </div>
+      </button>
+    </div>
+    <div class="card-list" id="listAssaults"><p class="empty-msg">Chargement…</p></div>
+  </div>
 
-      <div class="type-selector">
-        <button class="type-btn active" data-type="entrainement">
-          <!-- Entraînement : icône PLEINE (choix utilisateur) -->
-          <svg viewBox="0 0 24 24" fill="currentColor">
-            <path d="M20.57 14.86L22 13.43 20.57 12 17 15.57 8.43 7 12 3.43 10.57 2 9.14 3.43 7.71 2 5.57 4.14 4.14 2.71 2.71 4.14l1.43 1.43L2 7.71l1.43 1.43L2 10.57 3.43 12 7 8.43 15.57 17 12 20.57 13.43 22l1.43-1.43L16.29 22l2.14-2.14 1.43 1.43 1.43-1.43-1.43-1.43L22 16.29z"/>
-          </svg>
-          Entraînement
-        </button>
-        <button class="type-btn" data-type="competition">
-          <!-- Compétition : trait fin -->
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="8,21 12,17 16,21"/>
-            <line x1="12" y1="17" x2="12" y2="11"/>
-            <path d="M7 4H4v3c0 2.2 1.8 4 4 4"/>
-            <path d="M17 4h3v3c0 2.2-1.8 4-4 4"/>
-            <path d="M7 4h10v5a5 5 0 0 1-10 0V4z"/>
-          </svg>
-          Compétition
-        </button>
-      </div>
-
+  <div id="screen-entr-form" class="hidden">
+    <div class="screen-header">
+      <button class="btn-back" onclick="showScreen('entr','list')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15,18 9,12 15,6"/></svg>
+      </button>
+      <h2 class="screen-title">Nouvel assault</h2>
+    </div>
+    <div class="form-card">
       <div class="notes-area">
-        <textarea id="notesArea" placeholder="Notes sur l'assault… (ou dictez avec le micro)"></textarea>
+        <textarea id="notesArea" class="field-textarea" placeholder="Notes sur l'assault… (ou dictez avec le micro)"></textarea>
         <button class="mic-btn" id="micBtn" title="Dicter">
-          <!-- Micro : trait fin -->
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
             <rect x="9" y="2" width="6" height="11" rx="3"/>
             <path d="M19 10a7 7 0 0 1-14 0"/>
-            <line x1="12" y1="19" x2="12" y2="23"/>
-            <line x1="8" y1="23" x2="16" y2="23"/>
+            <line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/>
           </svg>
         </button>
       </div>
-
       <button class="save-btn" id="saveBtn">
-        <!-- Enregistrer : trait fin -->
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
           <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
-          <polyline points="17,21 17,13 7,13"/>
-          <polyline points="7,3 7,8 15,8"/>
+          <polyline points="17,21 17,13 7,13"/><polyline points="7,3 7,8 15,8"/>
         </svg>
         Enregistrer l'assault
       </button>
-
       <div class="feedback" id="feedback"></div>
     </div>
-  </section>
+  </div>
 
-  <!-- ===================== HISTORIQUE ===================== -->
-  <section id="tab-historique" class="tab-content">
-    <div class="history-list" id="historyList">
-      <p class="empty-msg">Chargement…</p>
-    </div>
-  </section>
+</section>
 
-  <script src="/static/js/app.js"></script>
-  <script>
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/static/sw.js');
-    }
-  </script>
+<!-- ═══════════════════════════════════════════════════════
+     HISTORIQUE
+════════════════════════════════════════════════════════ -->
+<section id="tab-historique" class="tab-content hidden">
+  <div class="screen-header">
+    <h2 class="screen-title">Historique</h2>
+  </div>
+  <div class="card-list" id="historyList"><p class="empty-msg">Chargement…</p></div>
+</section>
+
+<script src="/static/js/app.js"></script>
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/static/sw.js');
+  }
+</script>
 
 </body>
 </html>
