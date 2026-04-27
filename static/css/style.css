@@ -1,0 +1,378 @@
+/* ============================================================
+   MED — My Escrime Data  |  style.css
+   Thème   : Épée — navy #1e3a5f  |  gold #d4a017  |  bg #f0f4f8
+   Police  : Inter
+   Icônes  : trait fin (stroke-width 1.5) sauf entraînement (plein)
+   Logo    : pictogramme olympique escrime
+   ============================================================ */
+
+:root {
+  --primary:   #1e3a5f;
+  --primary-d: #122540;
+  --accent:    #d4a017;
+  --accent-d:  #b8870e;
+  --bg:        #f0f4f8;
+  --card:      #ffffff;
+  --text:      #1a1a2e;
+  --muted:     #6b7a90;
+  --danger:    #c0392b;
+  --success:   #27ae60;
+  --radius:    14px;
+  --shadow:    0 2px 14px rgba(30,58,95,.11);
+  --font:      'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+/* ── Header ─────────────────────────────────────────────── */
+header {
+  background: var(--primary);
+  color: #fff;
+  padding: 12px 18px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  box-shadow: 0 2px 10px rgba(0,0,0,.22);
+}
+
+.logo-icon {
+  width: 40px;
+  height: 40px;
+  background: var(--accent);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.logo-icon svg {
+  width: 26px;
+  height: 26px;
+  fill: var(--primary);
+  display: block;
+}
+
+.header-text { flex: 1; }
+
+.header-title {
+  font-size: 1.3rem;
+  font-weight: 800;
+  letter-spacing: .07em;
+  color: var(--accent);
+  line-height: 1;
+}
+
+.header-sub {
+  font-size: .68rem;
+  opacity: .55;
+  margin-top: 2px;
+  font-weight: 500;
+}
+
+.header-date {
+  font-size: .75rem;
+  opacity: .65;
+  text-align: right;
+  line-height: 1.4;
+  font-weight: 500;
+}
+
+/* ── Tab bar ─────────────────────────────────────────────── */
+.tab-bar {
+  display: flex;
+  background: var(--primary-d);
+}
+
+.tab {
+  flex: 1;
+  padding: 11px 8px;
+  border: none;
+  background: transparent;
+  color: rgba(255,255,255,.48);
+  font-family: var(--font);
+  font-size: .88rem;
+  font-weight: 700;
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: color .2s, border-color .2s;
+}
+
+.tab svg { width: 15px; height: 15px; flex-shrink: 0; }
+
+.tab.active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+/* ── Tab content ─────────────────────────────────────────── */
+.tab-content { display: none; padding: 16px; }
+.tab-content.active { display: block; }
+
+/* ── Form card ───────────────────────────────────────────── */
+.form-card {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 18px;
+  box-shadow: var(--shadow);
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.card-title {
+  font-size: .72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .09em;
+  color: var(--muted);
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.card-title svg { width: 14px; height: 14px; color: var(--accent); flex-shrink: 0; }
+
+/* ── Type selector ───────────────────────────────────────── */
+.type-selector {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.type-btn {
+  flex: 1;
+  padding: 10px 8px;
+  border: 2px solid var(--primary);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--primary);
+  font-family: var(--font);
+  font-weight: 700;
+  font-size: .85rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  transition: background .2s, color .2s;
+}
+
+.type-btn svg { width: 15px; height: 15px; flex-shrink: 0; }
+
+.type-btn.active {
+  background: var(--primary);
+  color: #fff;
+}
+
+/* ── Notes area ──────────────────────────────────────────── */
+.notes-area {
+  position: relative;
+  margin-bottom: 14px;
+}
+
+#notesArea {
+  width: 100%;
+  min-height: 130px;
+  padding: 13px 54px 13px 13px;
+  border: 2px solid #dde3ec;
+  border-radius: 10px;
+  font-family: var(--font);
+  font-size: .95rem;
+  line-height: 1.55;
+  resize: vertical;
+  color: var(--text);
+  background: var(--bg);
+  transition: border-color .2s, background .2s;
+}
+
+#notesArea:focus {
+  outline: none;
+  border-color: var(--primary);
+  background: var(--card);
+}
+
+.mic-btn {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: none;
+  background: var(--primary);
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(30,58,95,.25);
+  transition: background .2s, transform .1s;
+}
+
+.mic-btn svg { width: 17px; height: 17px; }
+
+.mic-btn:hover  { background: var(--primary-d); }
+.mic-btn:active { transform: scale(.93); }
+
+.mic-btn.listening {
+  background: var(--danger);
+  animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(192,57,43,.4); }
+  50%       { box-shadow: 0 0 0 8px rgba(192,57,43,0); }
+}
+
+/* ── Save button ─────────────────────────────────────────── */
+.save-btn {
+  width: 100%;
+  padding: 13px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-family: var(--font);
+  font-size: .97rem;
+  font-weight: 800;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: background .2s, transform .1s;
+}
+
+.save-btn svg { width: 17px; height: 17px; flex-shrink: 0; }
+
+.save-btn:hover  { background: var(--accent-d); }
+.save-btn:active { transform: scale(.98); }
+
+/* ── Feedback ────────────────────────────────────────────── */
+.feedback {
+  margin-top: 10px;
+  min-height: 20px;
+  font-size: .85rem;
+  font-weight: 600;
+  text-align: center;
+}
+.feedback.ok    { color: var(--success); }
+.feedback.error { color: var(--danger); }
+
+/* ── History list ────────────────────────────────────────── */
+.history-list {
+  max-width: 600px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.empty-msg {
+  text-align: center;
+  color: var(--muted);
+  padding: 48px 0;
+  font-size: .9rem;
+}
+
+.assault-card {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  box-shadow: var(--shadow);
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  border-left: 4px solid var(--primary);
+}
+
+.assault-card.competition {
+  border-left-color: var(--accent);
+}
+
+.assault-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 50px;
+}
+
+.assault-time {
+  font-size: .78rem;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.assault-badge {
+  display: inline-block;
+  margin-top: 5px;
+  padding: 3px 7px;
+  border-radius: 20px;
+  font-size: .68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  white-space: nowrap;
+}
+
+.badge-entrainement {
+  background: #e8f0fe;
+  color: var(--primary);
+}
+
+.badge-competition {
+  background: #fef3e2;
+  color: #8a5c00;
+}
+
+.assault-body { flex: 1; min-width: 0; }
+
+.assault-date {
+  font-size: .75rem;
+  color: var(--muted);
+  margin-bottom: 5px;
+  font-weight: 500;
+}
+
+.assault-notes {
+  font-size: .92rem;
+  line-height: 1.52;
+  white-space: pre-wrap;
+}
+
+.assault-notes.empty {
+  color: var(--muted);
+  font-style: italic;
+}
+
+.del-btn {
+  background: none;
+  border: none;
+  color: #d0d8e4;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: color .2s;
+}
+
+.del-btn svg { width: 16px; height: 16px; }
+.del-btn:hover { color: var(--danger); }
