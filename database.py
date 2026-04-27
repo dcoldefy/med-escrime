@@ -65,6 +65,7 @@ class AssaultPoule(Base):
     score_adversaire  = Column(Integer, nullable=True)
     victoire          = Column(Boolean, nullable=True)
     commentaires      = Column(Text, default="")
+    notes_post        = Column(Text, default="")
     created_at        = Column(DateTime, default=datetime.utcnow)
 
 
@@ -79,6 +80,7 @@ class AssaultTableau(Base):
     score_adversaire  = Column(Integer, nullable=True)
     victoire          = Column(Boolean, nullable=True)
     commentaires      = Column(Text, default="")
+    notes_post        = Column(Text, default="")
     created_at        = Column(DateTime, default=datetime.utcnow)
 
 

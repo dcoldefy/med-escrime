@@ -237,7 +237,7 @@ def create_assault_poule(
 @app.patch("/api/assaults_poule/{assault_id}")
 def patch_assault_poule(assault_id: int, data: dict, db: Session = Depends(database.get_db)):
     a = _get_or_404(db, database.AssaultPoule, assault_id)
-    allowed = {"adversaire", "score_moi", "score_adversaire", "victoire", "commentaires"}
+    allowed = {"adversaire", "score_moi", "score_adversaire", "victoire", "commentaires", "notes_post"}
     for k, v in data.items():
         if k in allowed:
             setattr(a, k, v)
@@ -293,7 +293,7 @@ def create_assault_tableau(
 @app.patch("/api/assaults_tableau/{assault_id}")
 def patch_assault_tableau(assault_id: int, data: dict, db: Session = Depends(database.get_db)):
     a = _get_or_404(db, database.AssaultTableau, assault_id)
-    allowed = {"adversaire", "score_moi", "score_adversaire", "victoire", "commentaires"}
+    allowed = {"adversaire", "score_moi", "score_adversaire", "victoire", "commentaires", "notes_post"}
     for k, v in data.items():
         if k in allowed:
             setattr(a, k, v)
@@ -393,7 +393,7 @@ def _assault_poule_dict(a: database.AssaultPoule) -> dict:
         "id": a.id, "poule_id": a.poule_id, "numero": a.numero,
         "adversaire": a.adversaire, "score_moi": a.score_moi,
         "score_adversaire": a.score_adversaire, "victoire": a.victoire,
-        "commentaires": a.commentaires,
+        "commentaires": a.commentaires, "notes_post": a.notes_post or "",
     }
 
 
@@ -402,5 +402,5 @@ def _assault_tableau_dict(a: database.AssaultTableau) -> dict:
         "id": a.id, "competition_id": a.competition_id, "tour": a.tour,
         "adversaire": a.adversaire, "score_moi": a.score_moi,
         "score_adversaire": a.score_adversaire, "victoire": a.victoire,
-        "commentaires": a.commentaires,
+        "commentaires": a.commentaires, "notes_post": a.notes_post or "",
     }

@@ -848,8 +848,12 @@ function renderPouleRow(a) {
         </div>
       </div>
       <div class="field-group">
-        <label class="field-label">Commentaires</label>
+        <label class="field-label">Commentaires <span class="opt">(pendant la compét.)</span></label>
         <textarea class="field-textarea" id="pComm${a.id}" style="min-height:60px" placeholder="Notes…">${esc(a.commentaires)}</textarea>
+      </div>
+      <div class="field-group">
+        <label class="field-label">Note complémentaire</label>
+        <textarea class="field-textarea" id="pPost${a.id}" style="min-height:60px" placeholder="Analyse, retour maître d'arme…">${esc(a.notes_post)}</textarea>
       </div>
       <button class="save-btn" onclick="savePouleRow(${a.id})" style="margin-bottom:4px">Enregistrer</button>
     </div>
@@ -896,8 +900,12 @@ function renderTableauRow(a) {
         </div>
       </div>
       <div class="field-group">
-        <label class="field-label">Commentaires</label>
+        <label class="field-label">Commentaires <span class="opt">(pendant la compét.)</span></label>
         <textarea class="field-textarea" id="tComm${a.id}" style="min-height:60px" placeholder="Notes…">${esc(a.commentaires)}</textarea>
+      </div>
+      <div class="field-group">
+        <label class="field-label">Note complémentaire</label>
+        <textarea class="field-textarea" id="tPost${a.id}" style="min-height:60px" placeholder="Analyse, retour maître d'arme…">${esc(a.notes_post)}</textarea>
       </div>
       <button class="save-btn" onclick="saveTableauRow(${a.id})" style="margin-bottom:4px">Enregistrer</button>
     </div>
@@ -909,12 +917,14 @@ async function savePouleRow(id) {
   const sm   = parseInt(document.getElementById(`pSm${id}`).value);
   const sa   = parseInt(document.getElementById(`pSa${id}`).value);
   const comm = document.getElementById(`pComm${id}`).value.trim();
+  const post = document.getElementById(`pPost${id}`).value.trim();
   const vic  = (!isNaN(sm) && !isNaN(sa)) ? (sm > sa) : null;
   try {
     const saved = await api(`/api/assaults_poule/${id}`, {
       method: 'PATCH',
       body: { adversaire: adv, score_moi: isNaN(sm) ? null : sm,
-              score_adversaire: isNaN(sa) ? null : sa, victoire: vic, commentaires: comm }
+              score_adversaire: isNaN(sa) ? null : sa, victoire: vic,
+              commentaires: comm, notes_post: post }
     });
     const head = document.querySelector(`#pRow${id} .assault-row-head`);
     if (head) {
@@ -939,12 +949,14 @@ async function saveTableauRow(id) {
   const sm   = parseInt(document.getElementById(`tSm${id}`).value);
   const sa   = parseInt(document.getElementById(`tSa${id}`).value);
   const comm = document.getElementById(`tComm${id}`).value.trim();
+  const post = document.getElementById(`tPost${id}`).value.trim();
   const vic  = getActive(`tVic${id}`) === 'true';
   try {
     const saved = await api(`/api/assaults_tableau/${id}`, {
       method: 'PATCH',
       body: { adversaire: adv, score_moi: isNaN(sm) ? null : sm,
-              score_adversaire: isNaN(sa) ? null : sa, victoire: vic, commentaires: comm }
+              score_adversaire: isNaN(sa) ? null : sa, victoire: vic,
+              commentaires: comm, notes_post: post }
     });
     const head = document.querySelector(`#tRow${id} .assault-row-head`);
     if (head) {
