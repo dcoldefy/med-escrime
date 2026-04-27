@@ -16,6 +16,12 @@ const S = {
 };
 
 // ── Icône delete ─────────────────────────────────────────────
+const MIC_SVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="16" height="16">
+  <rect x="9" y="2" width="6" height="11" rx="3"/>
+  <path d="M19 10a7 7 0 0 1-14 0"/>
+  <line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/>
+</svg>`;
+
 const ICO_DEL = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
   stroke-linecap="round" stroke-linejoin="round">
   <polyline points="3,6 5,6 21,6"/>
@@ -853,7 +859,10 @@ function renderPouleRow(a) {
       </div>
       <div class="field-group">
         <label class="field-label">Note complémentaire</label>
-        <textarea class="field-textarea" id="pPost${a.id}" style="min-height:60px" placeholder="Analyse, retour maître d'arme…">${esc(a.notes_post)}</textarea>
+        <div class="notes-area">
+          <textarea class="field-textarea" id="pPost${a.id}" style="min-height:60px;padding-right:50px" placeholder="Analyse, retour maître d'arme…">${esc(a.notes_post)}</textarea>
+          <button class="mic-btn" onclick="startMic('pPost${a.id}', this)" title="Dicter">${MIC_SVG}</button>
+        </div>
       </div>
       <button class="save-btn" onclick="savePouleRow(${a.id})" style="margin-bottom:4px">Enregistrer</button>
     </div>
@@ -905,7 +914,10 @@ function renderTableauRow(a) {
       </div>
       <div class="field-group">
         <label class="field-label">Note complémentaire</label>
-        <textarea class="field-textarea" id="tPost${a.id}" style="min-height:60px" placeholder="Analyse, retour maître d'arme…">${esc(a.notes_post)}</textarea>
+        <div class="notes-area">
+          <textarea class="field-textarea" id="tPost${a.id}" style="min-height:60px;padding-right:50px" placeholder="Analyse, retour maître d'arme…">${esc(a.notes_post)}</textarea>
+          <button class="mic-btn" onclick="startMic('tPost${a.id}', this)" title="Dicter">${MIC_SVG}</button>
+        </div>
       </div>
       <button class="save-btn" onclick="saveTableauRow(${a.id})" style="margin-bottom:4px">Enregistrer</button>
     </div>
