@@ -67,6 +67,27 @@ def list_assaults(db: Session = Depends(database.get_db)):
     return [_assault_dict(a) for a in rows]
 
 
+@app.get("/api/assaults/{assault_id}")
+def get_assault(assault_id: int, db: Session = Depends(database.get_db)):
+    a = _get_or_404(db, database.Assault, assault_id)
+    return _assault_dict(a)
+
+
+@app.patch("/api/assaults/{assault_id}")
+def patch_assault(assault_id: int, data: dict, db: Session = Depends(database.get_db)):
+    a = _get_or_404(db, database.Assault, assault_id)
+    for k, v in data.items():
+        if k == "date":
+            a.date = dt_date.fromisoformat(v)
+        elif k == "heure":
+            a.heure = dt_time.fromisoformat(v)
+        elif k == "notes":
+            a.notes = v
+    db.commit()
+    db.refresh(a)
+    return _assault_dict(a)
+
+
 @app.delete("/api/assaults/{assault_id}")
 def delete_assault(assault_id: int, db: Session = Depends(database.get_db)):
     a = db.query(database.Assault).filter(database.Assault.id == assault_id).first()
@@ -131,9 +152,11 @@ def get_competition(comp_id: int, db: Session = Depends(database.get_db)):
 @app.patch("/api/competitions/{comp_id}")
 def patch_competition(comp_id: int, data: dict, db: Session = Depends(database.get_db)):
     c = _get_or_404(db, database.Competition, comp_id)
-    allowed = {"terminee"}
+    allowed = {"terminee", "nom", "arme", "niveau", "ville", "lieu", "etat_de_forme", "notes_analyse"}
     for k, v in data.items():
-        if k in allowed:
+        if k == "date":
+            c.date = dt_date.fromisoformat(v)
+        elif k in allowed:
             setattr(c, k, v)
     db.commit()
     db.refresh(c)
@@ -211,6 +234,18 @@ def create_assault_poule(
     return _assault_poule_dict(a)
 
 
+@app.patch("/api/assaults_poule/{assault_id}")
+def patch_assault_poule(assault_id: int, data: dict, db: Session = Depends(database.get_db)):
+    a = _get_or_404(db, database.AssaultPoule, assault_id)
+    allowed = {"adversaire", "score_moi", "score_adversaire", "victoire", "commentaires"}
+    for k, v in data.items():
+        if k in allowed:
+            setattr(a, k, v)
+    db.commit()
+    db.refresh(a)
+    return _assault_poule_dict(a)
+
+
 @app.get("/api/poules/{poule_id}/assaults")
 def list_assaults_poule(poule_id: int, db: Session = Depends(database.get_db)):
     rows = (
@@ -250,6 +285,18 @@ def create_assault_tableau(
         commentaires=payload.commentaires.strip() if payload.commentaires else "",
     )
     db.add(a)
+    db.commit()
+    db.refresh(a)
+    return _assault_tableau_dict(a)
+
+
+@app.patch("/api/assaults_tableau/{assault_id}")
+def patch_assault_tableau(assault_id: int, data: dict, db: Session = Depends(database.get_db)):
+    a = _get_or_404(db, database.AssaultTableau, assault_id)
+    allowed = {"adversaire", "score_moi", "score_adversaire", "victoire", "commentaires"}
+    for k, v in data.items():
+        if k in allowed:
+            setattr(a, k, v)
     db.commit()
     db.refresh(a)
     return _assault_tableau_dict(a)
@@ -328,6 +375,7 @@ def _competition_dict(c: database.Competition) -> dict:
         "niveau": c.niveau, "ville": c.ville, "lieu": c.lieu,
         "etat_de_forme": c.etat_de_forme, "a_poule": c.a_poule,
         "a_tableau": c.a_tableau, "terminee": c.terminee,
+        "notes_analyse": c.notes_analyse or "",
         "created_at": c.created_at.isoformat() if c.created_at else None,
     }
 

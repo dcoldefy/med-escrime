@@ -357,3 +357,64 @@ select.field-input { cursor: pointer; }
 .photo-status { font-size: .78rem; margin-top: 8px; font-weight: 600; }
 .photo-status.ok    { color: var(--success); }
 .photo-status.error { color: var(--danger); }
+
+/* ── Detail section title ────────────────────────────────── */
+.detail-section-title {
+  font-size: .72rem; font-weight: 800; text-transform: uppercase;
+  letter-spacing: .08em; color: var(--muted);
+  margin-bottom: 12px; padding-bottom: 6px;
+  border-bottom: 1px solid var(--border);
+}
+
+/* ── Assault rows (collapsibles dans la vue détail) ──────── */
+.assault-row {
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  margin-bottom: 8px; overflow: hidden;
+}
+.assault-row-head {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 12px; cursor: pointer; background: var(--bg);
+  transition: background .15s;
+}
+.assault-row-head:hover { background: #e4ebf5; }
+
+.row-num {
+  font-size: .72rem; font-weight: 800; color: var(--primary);
+  text-transform: uppercase; min-width: 52px; flex-shrink: 0;
+}
+.row-adv { flex: 1; font-size: .9rem; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.row-score { font-size: .82rem; font-weight: 700; color: var(--muted); white-space: nowrap; }
+
+.result-badge {
+  padding: 2px 7px; border-radius: 20px; font-size: .72rem; font-weight: 800; flex-shrink: 0;
+}
+.result-badge.victory { background: #d4edda; color: var(--victory); }
+.result-badge.defeat  { background: #f8d7da; color: var(--defeat); }
+.result-badge.unknown { background: #e2e8f0; color: var(--muted); }
+
+.row-chevron {
+  width: 16px; height: 16px; color: var(--muted); flex-shrink: 0;
+  transition: transform .25s;
+}
+.row-chevron.rotated { transform: rotate(180deg); }
+
+.assault-row-body {
+  padding: 12px; background: var(--card);
+  border-top: 1px solid var(--border);
+}
+.row-comment {
+  font-size: .88rem; color: var(--muted); margin-bottom: 10px;
+  font-style: italic; white-space: pre-wrap;
+}
+
+/* ── Photo gallery ───────────────────────────────────────── */
+.photo-gallery { display: flex; gap: 10px; flex-wrap: wrap; }
+.photo-thumb {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  text-decoration: none;
+}
+.photo-thumb img {
+  width: 90px; height: 90px; object-fit: cover;
+  border-radius: var(--radius-sm); border: 2px solid var(--border);
+}
+.photo-thumb span { font-size: .68rem; color: var(--muted); font-weight: 600; text-transform: uppercase; }

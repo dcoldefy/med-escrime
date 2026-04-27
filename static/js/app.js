@@ -31,6 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initTabs();
   initMicAll();
   initCompForm();
+  initCompDetail();
   initPouleSetup();
   initPouleAssault();
   initPouleEnd();
@@ -38,6 +39,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initTableauAssault();
   initCompEnd();
   initEntrainement();
+  initEntrDetail();
   loadComps();
   loadAssaults();
   loadHistorique();
@@ -109,6 +111,8 @@ function initMicAll() {
         'micPoule':        'pouleCommentaires',
         'micTableau':      'tableauCommentaires',
         'micBtn':          'notesArea',
+        'micAnalyse':      'dCompNotes',
+        'micEntrDetail':   'eEntrNotes',
       };
       const targetId = map[btn.id];
       if (!targetId) return;
@@ -228,12 +232,12 @@ async function saveComp() {
   }
 }
 
-// Reprendre une compétition existante
+// Reprendre une compétition ou ouvrir son détail
 async function resumeComp(id) {
   try {
     const c = await api(`/api/competitions/${id}`);
     S.comp = c;
-    if (c.terminee) { alert('Cette compétition est terminée.'); return; }
+    if (c.terminee) { openCompDetail(id); return; }
     startCompWorkflow(c);
   } catch { alert('Impossible de charger la compétition.'); }
 }
@@ -555,7 +559,7 @@ async function saveAssault() {
 function renderAssaultCard(a) {
   const date  = new Date(a.date + 'T00:00:00').toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
   const heure = a.heure.slice(0, 5);
-  return `<div class="assault-card" id="assault-${a.id}">
+  return `<div class="assault-card" id="assault-${a.id}" onclick="openEntrDetail(${a.id})" style="cursor:pointer">
     <div class="assault-meta">
       <span class="assault-time">${heure}</span>
       <span class="assault-badge badge-entrainement">Entraîn.</span>
@@ -564,7 +568,7 @@ function renderAssaultCard(a) {
       <div class="assault-date">${date}</div>
       <div class="assault-notes${a.notes ? '' : ' empty'}">${a.notes ? esc(a.notes) : 'Aucune note.'}</div>
     </div>
-    <button class="del-btn" onclick="deleteAssault(${a.id})" title="Supprimer">${ICO_DEL}</button>
+    <button class="del-btn" onclick="event.stopPropagation(); deleteAssault(${a.id})" title="Supprimer">${ICO_DEL}</button>
   </div>`;
 }
 
@@ -606,7 +610,8 @@ function renderHistoComp(c) {
   const day = d.toLocaleDateString('fr-FR', { day: 'numeric' });
   const mon = d.toLocaleDateString('fr-FR', { month: 'short', year: 'numeric' });
   const arme = { epee: 'Épée', fleuret: 'Fleuret', sabre: 'Sabre' }[c.arme] || c.arme;
-  return `<div class="assault-card" style="border-left-color:var(--accent)">
+  return `<div class="assault-card" style="border-left-color:var(--accent); cursor:pointer"
+      onclick="openFromHisto('comp', ${c.id})">
     <div class="assault-meta">
       <span class="assault-time">${day}</span>
       <span class="assault-badge badge-competition">Compét.</span>
@@ -672,4 +677,323 @@ function setFeedback(id, msg, type) {
 function esc(str) {
   if (!str) return '';
   return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ─────────────────────────────────────────────────────────────
+//  NAVIGATION PROGRAMMATIQUE
+// ─────────────────────────────────────────────────────────────
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(s => s.classList.add('hidden'));
+  document.querySelector(`.tab[data-tab="${name}"]`)?.classList.add('active');
+  document.getElementById('tab-' + name)?.classList.remove('hidden');
+  S.tab = name;
+}
+
+function openFromHisto(type, id) {
+  if (type === 'comp') {
+    switchTab('competitions');
+    openCompDetail(id);
+  } else {
+    switchTab('entrainement');
+    openEntrDetail(id);
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+//  DÉTAIL COMPÉTITION
+// ─────────────────────────────────────────────────────────────
+function initCompDetail() {
+  initRadioGroup('dCompNiveau');
+  document.getElementById('btnDetailBack').addEventListener('click', () => showScreen('comp', 'list'));
+  document.getElementById('btnSaveCompInfo').addEventListener('click', saveCompInfo);
+  document.getElementById('btnSaveCompNotes').addEventListener('click', saveCompNotes);
+}
+
+async function openCompDetail(id) {
+  try {
+    const comp = await api(`/api/competitions/${id}`);
+    S.detailComp = comp;
+
+    document.getElementById('detailCompNom').textContent = comp.nom;
+    document.getElementById('dCompNom').value   = comp.nom;
+    document.getElementById('dCompDate').value  = comp.date;
+    document.getElementById('dCompArme').value  = comp.arme;
+    setActive('dCompNiveau', comp.niveau);
+    document.getElementById('dCompVille').value = comp.ville || '';
+    document.getElementById('dCompLieu').value  = comp.lieu || '';
+    document.getElementById('dCompForme').value = comp.etat_de_forme || '';
+    document.getElementById('dCompNotes').value = comp.notes_analyse || '';
+    setFeedback('feedbackDetail', '', '');
+
+    // Poule
+    if (comp.a_poule) {
+      try {
+        const poule  = await api(`/api/competitions/${id}/poule`);
+        const assaults = await api(`/api/poules/${poule.id}/assaults`);
+        document.getElementById('dPouleSection').classList.remove('hidden');
+        document.getElementById('dPouleAssaults').innerHTML =
+          assaults.length ? assaults.map(renderPouleRow).join('') : '<p class="empty-msg">Aucun assault.</p>';
+      } catch { document.getElementById('dPouleSection').classList.add('hidden'); }
+    } else {
+      document.getElementById('dPouleSection').classList.add('hidden');
+    }
+
+    // Tableau
+    if (comp.a_tableau) {
+      try {
+        const assaults = await api(`/api/competitions/${id}/tableau`);
+        if (assaults.length) {
+          document.getElementById('dTableauSection').classList.remove('hidden');
+          document.getElementById('dTableauAssaults').innerHTML = assaults.map(renderTableauRow).join('');
+        } else {
+          document.getElementById('dTableauSection').classList.add('hidden');
+        }
+      } catch { document.getElementById('dTableauSection').classList.add('hidden'); }
+    } else {
+      document.getElementById('dTableauSection').classList.add('hidden');
+    }
+
+    // Photos
+    try {
+      const photos = await api(`/api/competitions/${id}/photos`);
+      if (photos.length) {
+        document.getElementById('dPhotosSection').classList.remove('hidden');
+        document.getElementById('dPhotos').innerHTML = photos.map(p =>
+          `<a href="${p.url}" target="_blank" class="photo-thumb">
+            <img src="${p.url}" alt="${p.type_photo}" loading="lazy"/>
+            <span>${p.type_photo}</span>
+          </a>`
+        ).join('');
+      } else {
+        document.getElementById('dPhotosSection').classList.add('hidden');
+      }
+    } catch { document.getElementById('dPhotosSection').classList.add('hidden'); }
+
+    showScreen('comp', 'detail');
+  } catch { alert('Impossible de charger la compétition.'); }
+}
+
+async function saveCompInfo() {
+  const id = S.detailComp.id;
+  const payload = {
+    nom:           document.getElementById('dCompNom').value.trim(),
+    date:          document.getElementById('dCompDate').value,
+    arme:          document.getElementById('dCompArme').value,
+    niveau:        getActive('dCompNiveau'),
+    ville:         document.getElementById('dCompVille').value.trim(),
+    lieu:          document.getElementById('dCompLieu').value.trim(),
+    etat_de_forme: document.getElementById('dCompForme').value.trim(),
+  };
+  try {
+    const c = await api(`/api/competitions/${id}`, { method: 'PATCH', body: payload });
+    S.detailComp = c;
+    document.getElementById('detailCompNom').textContent = c.nom;
+    setFeedback('feedbackDetail', 'Infos enregistrées !', 'ok');
+    setTimeout(() => setFeedback('feedbackDetail', '', ''), 3000);
+    loadComps();
+  } catch { setFeedback('feedbackDetail', 'Erreur.', 'error'); }
+}
+
+async function saveCompNotes() {
+  const id    = S.detailComp.id;
+  const notes = document.getElementById('dCompNotes').value.trim();
+  try {
+    await api(`/api/competitions/${id}`, { method: 'PATCH', body: { notes_analyse: notes } });
+    setFeedback('feedbackDetail', 'Notes enregistrées !', 'ok');
+    setTimeout(() => setFeedback('feedbackDetail', '', ''), 3000);
+  } catch { setFeedback('feedbackDetail', 'Erreur.', 'error'); }
+}
+
+// ── Assault rows collapsibles ─────────────────────────────
+function toggleRow(editId) {
+  const body = document.getElementById(editId);
+  if (!body) return;
+  const opening = body.classList.contains('hidden');
+  body.classList.toggle('hidden');
+  body.previousElementSibling?.querySelector('.row-chevron')?.classList.toggle('rotated', opening);
+}
+
+const CHEVRON_SVG = `<svg class="row-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><polyline points="6,9 12,15 18,9"/></svg>`;
+
+function renderPouleRow(a) {
+  const score = (a.score_moi != null && a.score_adversaire != null)
+    ? `${a.score_moi}–${a.score_adversaire}` : '—';
+  const vic = a.victoire;
+  const rc  = vic === true ? 'victory' : vic === false ? 'defeat' : 'unknown';
+  const rl  = vic === true ? 'V' : vic === false ? 'D' : '?';
+  return `<div class="assault-row" id="pRow${a.id}">
+    <div class="assault-row-head" onclick="toggleRow('pEdit${a.id}')">
+      <span class="row-num">A${a.numero}</span>
+      <span class="row-adv">${esc(a.adversaire) || '<em style="color:var(--muted)">—</em>'}</span>
+      <span class="row-score">${score}</span>
+      <span class="result-badge ${rc}">${rl}</span>
+      ${CHEVRON_SVG}
+    </div>
+    <div class="assault-row-body hidden" id="pEdit${a.id}">
+      ${a.commentaires ? `<p class="row-comment">${esc(a.commentaires)}</p>` : ''}
+      <div class="field-group">
+        <label class="field-label">Adversaire</label>
+        <input type="text" class="field-input" id="pAdv${a.id}" value="${esc(a.adversaire)}" />
+      </div>
+      <div class="score-row">
+        <div class="field-group score-field">
+          <label class="field-label">Moi</label>
+          <input type="number" class="field-input score-input" id="pSm${a.id}" value="${a.score_moi ?? ''}" min="0" max="15" placeholder="—" />
+        </div>
+        <div class="score-sep">–</div>
+        <div class="field-group score-field">
+          <label class="field-label">Adv.</label>
+          <input type="number" class="field-input score-input" id="pSa${a.id}" value="${a.score_adversaire ?? ''}" min="0" max="15" placeholder="—" />
+        </div>
+      </div>
+      <div class="field-group">
+        <label class="field-label">Commentaires</label>
+        <textarea class="field-textarea" id="pComm${a.id}" style="min-height:60px" placeholder="Notes…">${esc(a.commentaires)}</textarea>
+      </div>
+      <button class="save-btn" onclick="savePouleRow(${a.id})" style="margin-bottom:4px">Enregistrer</button>
+    </div>
+  </div>`;
+}
+
+function renderTableauRow(a) {
+  const score = (a.score_moi != null && a.score_adversaire != null)
+    ? `${a.score_moi}–${a.score_adversaire}` : '—';
+  const rc = a.victoire ? 'victory' : 'defeat';
+  const rl = a.victoire ? 'V' : 'D';
+  return `<div class="assault-row" id="tRow${a.id}">
+    <div class="assault-row-head" onclick="toggleRow('tEdit${a.id}')">
+      <span class="row-num">${tourLabel(a.tour)}</span>
+      <span class="row-adv">${esc(a.adversaire) || '<em style="color:var(--muted)">—</em>'}</span>
+      <span class="row-score">${score}</span>
+      <span class="result-badge ${rc}">${rl}</span>
+      ${CHEVRON_SVG}
+    </div>
+    <div class="assault-row-body hidden" id="tEdit${a.id}">
+      ${a.commentaires ? `<p class="row-comment">${esc(a.commentaires)}</p>` : ''}
+      <div class="field-group">
+        <label class="field-label">Adversaire</label>
+        <input type="text" class="field-input" id="tAdv${a.id}" value="${esc(a.adversaire)}" />
+      </div>
+      <div class="score-row">
+        <div class="field-group score-field">
+          <label class="field-label">Moi</label>
+          <input type="number" class="field-input score-input" id="tSm${a.id}" value="${a.score_moi ?? ''}" min="0" max="15" placeholder="—" />
+        </div>
+        <div class="score-sep">–</div>
+        <div class="field-group score-field">
+          <label class="field-label">Adv.</label>
+          <input type="number" class="field-input score-input" id="tSa${a.id}" value="${a.score_adversaire ?? ''}" min="0" max="15" placeholder="—" />
+        </div>
+      </div>
+      <div class="field-group">
+        <label class="field-label">Résultat</label>
+        <div class="toggle-row" id="tVic${a.id}">
+          <button class="toggle-btn ${a.victoire ? 'active' : ''}" data-val="true"
+            onclick="setActive('tVic${a.id}','true')">Victoire</button>
+          <button class="toggle-btn ${!a.victoire ? 'active' : ''}" data-val="false"
+            onclick="setActive('tVic${a.id}','false')">Défaite</button>
+        </div>
+      </div>
+      <div class="field-group">
+        <label class="field-label">Commentaires</label>
+        <textarea class="field-textarea" id="tComm${a.id}" style="min-height:60px" placeholder="Notes…">${esc(a.commentaires)}</textarea>
+      </div>
+      <button class="save-btn" onclick="saveTableauRow(${a.id})" style="margin-bottom:4px">Enregistrer</button>
+    </div>
+  </div>`;
+}
+
+async function savePouleRow(id) {
+  const adv  = document.getElementById(`pAdv${id}`).value.trim();
+  const sm   = parseInt(document.getElementById(`pSm${id}`).value);
+  const sa   = parseInt(document.getElementById(`pSa${id}`).value);
+  const comm = document.getElementById(`pComm${id}`).value.trim();
+  const vic  = (!isNaN(sm) && !isNaN(sa)) ? (sm > sa) : null;
+  try {
+    const saved = await api(`/api/assaults_poule/${id}`, {
+      method: 'PATCH',
+      body: { adversaire: adv, score_moi: isNaN(sm) ? null : sm,
+              score_adversaire: isNaN(sa) ? null : sa, victoire: vic, commentaires: comm }
+    });
+    const head = document.querySelector(`#pRow${id} .assault-row-head`);
+    if (head) {
+      head.querySelector('.row-adv').innerHTML = esc(saved.adversaire) || '<em style="color:var(--muted)">—</em>';
+      const s = (saved.score_moi != null && saved.score_adversaire != null) ? `${saved.score_moi}–${saved.score_adversaire}` : '—';
+      head.querySelector('.row-score').textContent = s;
+      const b = head.querySelector('.result-badge');
+      const v = saved.victoire;
+      b.className = `result-badge ${v === true ? 'victory' : v === false ? 'defeat' : 'unknown'}`;
+      b.textContent = v === true ? 'V' : v === false ? 'D' : '?';
+    }
+    const body = document.getElementById(`pEdit${id}`);
+    const cp = body?.querySelector('.row-comment');
+    if (comm) { if (cp) cp.textContent = comm; else if (body) { const p = document.createElement('p'); p.className = 'row-comment'; p.textContent = comm; body.insertBefore(p, body.firstChild); } }
+    else if (cp) cp.remove();
+    toggleRow(`pEdit${id}`);
+  } catch { alert('Erreur lors de la sauvegarde.'); }
+}
+
+async function saveTableauRow(id) {
+  const adv  = document.getElementById(`tAdv${id}`).value.trim();
+  const sm   = parseInt(document.getElementById(`tSm${id}`).value);
+  const sa   = parseInt(document.getElementById(`tSa${id}`).value);
+  const comm = document.getElementById(`tComm${id}`).value.trim();
+  const vic  = getActive(`tVic${id}`) === 'true';
+  try {
+    const saved = await api(`/api/assaults_tableau/${id}`, {
+      method: 'PATCH',
+      body: { adversaire: adv, score_moi: isNaN(sm) ? null : sm,
+              score_adversaire: isNaN(sa) ? null : sa, victoire: vic, commentaires: comm }
+    });
+    const head = document.querySelector(`#tRow${id} .assault-row-head`);
+    if (head) {
+      head.querySelector('.row-adv').innerHTML = esc(saved.adversaire) || '<em style="color:var(--muted)">—</em>';
+      const s = (saved.score_moi != null && saved.score_adversaire != null) ? `${saved.score_moi}–${saved.score_adversaire}` : '—';
+      head.querySelector('.row-score').textContent = s;
+      const b = head.querySelector('.result-badge');
+      b.className = `result-badge ${saved.victoire ? 'victory' : 'defeat'}`;
+      b.textContent = saved.victoire ? 'V' : 'D';
+    }
+    const body = document.getElementById(`tEdit${id}`);
+    const cp = body?.querySelector('.row-comment');
+    if (comm) { if (cp) cp.textContent = comm; else if (body) { const p = document.createElement('p'); p.className = 'row-comment'; p.textContent = comm; body.insertBefore(p, body.firstChild); } }
+    else if (cp) cp.remove();
+    toggleRow(`tEdit${id}`);
+  } catch { alert('Erreur lors de la sauvegarde.'); }
+}
+
+// ─────────────────────────────────────────────────────────────
+//  DÉTAIL ASSAULT D'ENTRAÎNEMENT
+// ─────────────────────────────────────────────────────────────
+function initEntrDetail() {
+  document.getElementById('btnSaveEntrDetail').addEventListener('click', saveEntrDetail);
+}
+
+async function openEntrDetail(id) {
+  try {
+    const a = await api(`/api/assaults/${id}`);
+    S.detailEntr = a;
+    document.getElementById('eEntrDate').value  = a.date;
+    document.getElementById('eEntrHeure').value = a.heure.slice(0, 5);
+    document.getElementById('eEntrNotes').value = a.notes;
+    S.micBaseText = a.notes;
+    setFeedback('feedbackEntrDetail', '', '');
+    showScreen('entr', 'detail');
+  } catch { alert('Impossible de charger l\'assault.'); }
+}
+
+async function saveEntrDetail() {
+  const id    = S.detailEntr.id;
+  const date  = document.getElementById('eEntrDate').value;
+  const heure = document.getElementById('eEntrHeure').value;
+  const notes = document.getElementById('eEntrNotes').value.trim();
+  try {
+    await api(`/api/assaults/${id}`, {
+      method: 'PATCH', body: { date, heure: heure + ':00', notes }
+    });
+    setFeedback('feedbackEntrDetail', 'Enregistré !', 'ok');
+    setTimeout(() => setFeedback('feedbackEntrDetail', '', ''), 3000);
+    loadAssaults();
+  } catch { setFeedback('feedbackEntrDetail', 'Erreur.', 'error'); }
 }

@@ -39,6 +39,7 @@ class Competition(Base):
     a_poule       = Column(Boolean, nullable=False, default=True)
     a_tableau     = Column(Boolean, nullable=False, default=True)
     terminee      = Column(Boolean, nullable=False, default=False)
+    notes_analyse = Column(Text, default="")
     created_at    = Column(DateTime, default=datetime.utcnow)
 
 
