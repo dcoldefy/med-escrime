@@ -95,7 +95,7 @@ cd ~/med-escrime && git pull
 sudo systemctl restart med-escrime
 
 # 3. Accès via Tailscale
-https://survalerte.tail57ebcb.ts.net:8002
+https://<hostname>.ts.net:8002
 ```
 
 ### Service systemd
@@ -106,11 +106,11 @@ Description=MED - My Escrime Data
 After=network.target
 
 [Service]
-User=david
-WorkingDirectory=/home/david/med-escrime
-ExecStart=/home/david/.venv/bin/uvicorn app:app --host 0.0.0.0 --port 8002 \
-  --ssl-certfile /home/david/survalerte.tail57ebcb.ts.net.crt \
-  --ssl-keyfile  /home/david/survalerte.tail57ebcb.ts.net.key
+User=<user>
+WorkingDirectory=/home/<user>/med-escrime
+ExecStart=/home/<user>/.venv/bin/uvicorn app:app --host 0.0.0.0 --port 8002 \
+  --ssl-certfile /home/<user>/<hostname>.ts.net.crt \
+  --ssl-keyfile  /home/<user>/<hostname>.ts.net.key
 Restart=always
 
 [Install]
