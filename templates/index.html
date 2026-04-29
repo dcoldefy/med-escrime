@@ -519,10 +519,12 @@
       <button class="btn-back" onclick="showScreen('entr','list')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15,18 9,12 15,6"/></svg>
       </button>
-      <h2 class="screen-title">Nouvel assault</h2>
+      <div class="screen-header-text">
+        <h2 class="screen-title">Nouvel assault</h2>
+        <p class="form-hint">n'hésitez pas à formaliser les notes par exemple tireur : ... / assault en x touches… pour analyse future</p>
+      </div>
     </div>
-    <p class="form-hint">n'hésitez pas à formaliser les notes par exemple tireur : ... / assault en x touches… pour analyse future</p>
-    <div class="form-card">
+    <div class="form-card" style="margin-top:10px;">
       <div class="notes-area">
         <textarea id="notesArea" class="field-textarea" placeholder="Notes sur l'assault… (ou dictez avec le micro)"></textarea>
         <button class="mic-btn" id="micBtn" title="Dicter">
