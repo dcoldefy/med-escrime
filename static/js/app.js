@@ -33,6 +33,19 @@ const ICO_DEL = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stro
 //  INIT
 // ─────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
+  // Récupère le token depuis l'URL (?u=TOKEN) et le stocke
+  const params = new URLSearchParams(window.location.search);
+  const urlToken = params.get('u');
+  if (urlToken) {
+    localStorage.setItem('med_token', urlToken);
+    window.history.replaceState({}, '', '/');
+  }
+
+  if (!localStorage.getItem('med_token')) {
+    document.getElementById('invalid-token-screen').classList.remove('hidden');
+    return;
+  }
+
   initDate();
   initTabs();
   initMicAll();
@@ -640,7 +653,10 @@ function renderHistoComp(c) {
 
 // Requête API JSON
 async function api(url, options = {}) {
-  const opts = { headers: { 'Content-Type': 'application/json' } };
+  const token = localStorage.getItem('med_token');
+  const headers = { 'Content-Type': 'application/json' };
+  if (token) headers['X-User-Token'] = token;
+  const opts = { headers };
   if (options.method) opts.method = options.method;
   if (options.body)   opts.body   = JSON.stringify(options.body);
   const res = await fetch(url, opts);
@@ -650,10 +666,13 @@ async function api(url, options = {}) {
 
 // Upload multipart
 async function uploadPhoto(compId, type, file) {
+  const token = localStorage.getItem('med_token');
   const fd = new FormData();
   fd.append('type_photo', type);
   fd.append('file', file);
-  const res = await fetch(`/api/competitions/${compId}/photos`, { method: 'POST', body: fd });
+  const headers = {};
+  if (token) headers['X-User-Token'] = token;
+  const res = await fetch(`/api/competitions/${compId}/photos`, { method: 'POST', body: fd, headers });
   if (!res.ok) throw new Error(await res.text());
   return res.json();
 }

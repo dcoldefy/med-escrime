@@ -15,6 +15,22 @@
 </head>
 <body>
 
+<!-- ═══ Écran lien invalide ═══ -->
+<div id="invalid-token-screen" class="hidden" style="
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  min-height:100vh; padding:32px; text-align:center; gap:16px;">
+  <svg viewBox="0 0 24 24" fill="none" stroke="#e74c3c" stroke-width="1.5"
+    stroke-linecap="round" stroke-linejoin="round" width="48" height="48">
+    <circle cx="12" cy="12" r="10"/>
+    <line x1="12" y1="8" x2="12" y2="12"/>
+    <line x1="12" y1="16" x2="12.01" y2="16"/>
+  </svg>
+  <h2 style="color:#e74c3c; font-size:1.1rem; font-weight:800;">Lien invalide</h2>
+  <p style="color:#6b7a90; font-size:0.9rem; max-width:280px;">
+    Ce lien n'est pas valide ou a expiré.<br>Contactez l'administrateur pour obtenir votre lien d'accès.
+  </p>
+</div>
+
 <!-- ═══ Logo (symbol SVG réutilisable) ═══ -->
 <svg style="display:none" xmlns="http://www.w3.org/2000/svg">
   <symbol id="ico-fencer" viewBox="0 0 960 960">

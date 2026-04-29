@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MED — Admin</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', sans-serif; background: #f0f4f8; color: #1e3a5f; min-height: 100vh; padding: 24px 16px; }
+    h1 { font-size: 1.3rem; font-weight: 800; margin-bottom: 24px; display: flex; align-items: center; gap: 10px; }
+    h1 span { font-size: 0.75rem; font-weight: 600; background: #e74c3c; color: white; padding: 2px 8px; border-radius: 12px; }
+    .card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,.08); margin-bottom: 20px; max-width: 600px; }
+    .card h2 { font-size: 0.9rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: #6b7a90; margin-bottom: 16px; }
+    .form-row { display: flex; gap: 10px; }
+    input[type=text] { flex: 1; padding: 10px 14px; border: 2px solid #e2e8f0; border-radius: 8px; font-family: inherit; font-size: 0.9rem; outline: none; }
+    input[type=text]:focus { border-color: #1e3a5f; }
+    button { padding: 10px 18px; background: #1e3a5f; color: white; border: none; border-radius: 8px; font-family: inherit; font-size: 0.9rem; font-weight: 600; cursor: pointer; }
+    button:hover { background: #2a4f7f; }
+    button.danger { background: #e74c3c; }
+    button.danger:hover { background: #c0392b; }
+    .user-row { display: flex; flex-direction: column; gap: 6px; padding: 14px 0; border-bottom: 1px solid #f0f4f8; }
+    .user-row:last-child { border-bottom: none; }
+    .user-name { font-weight: 700; font-size: 0.95rem; }
+    .user-link { font-size: 0.75rem; color: #6b7a90; word-break: break-all; background: #f8fafc; padding: 6px 10px; border-radius: 6px; font-family: monospace; }
+    .user-actions { display: flex; gap: 8px; align-items: center; }
+    .btn-copy { background: #e2e8f0; color: #1e3a5f; font-size: 0.8rem; padding: 6px 12px; }
+    .btn-copy:hover { background: #cbd5e0; }
+    .feedback { font-size: 0.8rem; margin-top: 8px; min-height: 18px; }
+    .feedback.ok { color: #27ae60; }
+    .feedback.error { color: #e74c3c; }
+    .empty { color: #6b7a90; font-style: italic; font-size: 0.9rem; padding: 8px 0; }
+  </style>
+</head>
+<body>
+
+<h1>MED — Administration <span>Admin</span></h1>
+
+<div class="card">
+  <h2>Créer un utilisateur</h2>
+  <div class="form-row">
+    <input type="text" id="newUserName" placeholder="Prénom Nom" />
+    <button onclick="createUser()">Créer</button>
+  </div>
+  <div class="feedback" id="createFeedback"></div>
+</div>
+
+<div class="card">
+  <h2>Utilisateurs</h2>
+  <div id="userList">
+    {% if users %}
+      {% for u in users %}
+      <div class="user-row" id="user-{{ u.id }}">
+        <div class="user-name">{{ u.name }}</div>
+        <div class="user-link" id="link-{{ u.id }}">{{ request.base_url }}?u={{ u.token }}</div>
+        <div class="user-actions">
+          <button class="btn-copy" onclick="copyLink({{ u.id }})">Copier le lien</button>
+          <button class="danger" onclick="deleteUser({{ u.id }}, '{{ u.name }}')">Supprimer</button>
+        </div>
+      </div>
+      {% endfor %}
+    {% else %}
+      <p class="empty" id="emptyMsg">Aucun utilisateur.</p>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+async function createUser() {
+  const name = document.getElementById('newUserName').value.trim();
+  const fb   = document.getElementById('createFeedback');
+  if (!name) { fb.textContent = 'Entrez un nom.'; fb.className = 'feedback error'; return; }
+
+  const res = await fetch('/api/admin/users', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name }),
+  });
+  if (!res.ok) { fb.textContent = 'Erreur lors de la création.'; fb.className = 'feedback error'; return; }
+
+  const u = await res.json();
+  fb.textContent = `Utilisateur "${u.name}" créé !`;
+  fb.className = 'feedback ok';
+  document.getElementById('newUserName').value = '';
+  document.getElementById('emptyMsg')?.remove();
+
+  const baseUrl = window.location.origin;
+  const row = document.createElement('div');
+  row.className = 'user-row';
+  row.id = `user-${u.id}`;
+  row.innerHTML = `
+    <div class="user-name">${u.name}</div>
+    <div class="user-link" id="link-${u.id}">${baseUrl}/?u=${u.token}</div>
+    <div class="user-actions">
+      <button class="btn-copy" onclick="copyLink(${u.id})">Copier le lien</button>
+      <button class="danger" onclick="deleteUser(${u.id}, '${u.name}')">Supprimer</button>
+    </div>`;
+  document.getElementById('userList').appendChild(row);
+}
+
+async function deleteUser(id, name) {
+  if (!confirm(`Supprimer "${name}" ? Toutes ses données seront perdues.`)) return;
+  const res = await fetch(`/api/admin/users/${id}`, { method: 'DELETE' });
+  if (!res.ok) { alert('Erreur lors de la suppression.'); return; }
+  document.getElementById(`user-${id}`)?.remove();
+  if (!document.querySelector('.user-row')) {
+    document.getElementById('userList').innerHTML = '<p class="empty" id="emptyMsg">Aucun utilisateur.</p>';
+  }
+}
+
+function copyLink(id) {
+  const link = document.getElementById(`link-${id}`)?.textContent;
+  if (!link) return;
+  navigator.clipboard.writeText(link).then(() => alert('Lien copié !'));
+}
+</script>
+</body>
+</html>
