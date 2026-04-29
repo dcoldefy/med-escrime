@@ -111,7 +111,19 @@ async function deleteUser(id, name) {
 function copyLink(id) {
   const link = document.getElementById(`link-${id}`)?.textContent;
   if (!link) return;
-  navigator.clipboard.writeText(link).then(() => alert('Lien copié !'));
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(link).then(() => alert('Lien copié !'));
+  } else {
+    const ta = document.createElement('textarea');
+    ta.value = link;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    alert('Lien copié !');
+  }
 }
 </script>
 </body>

@@ -47,6 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   initDate();
+  initUserName();
   initTabs();
   initMicAll();
   initCompForm();
@@ -63,6 +64,15 @@ document.addEventListener('DOMContentLoaded', () => {
   loadAssaults();
   loadHistorique();
 });
+
+// ── User name header ──────────────────────────────────────────
+async function initUserName() {
+  try {
+    const me = await api('/api/me');
+    const el = document.getElementById('headerUser');
+    if (el && me.name) el.textContent = '· ' + me.name;
+  } catch (_) {}
+}
 
 // ── Date header ───────────────────────────────────────────────
 function initDate() {

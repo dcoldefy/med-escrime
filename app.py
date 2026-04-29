@@ -58,6 +58,11 @@ def index(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
 
+@app.get("/api/me")
+def get_me(user: database.User = Depends(get_current_user)):
+    return {"id": user.id, "name": user.name}
+
+
 @app.get("/admin")
 def admin_page(request: Request, db: Session = Depends(database.get_db)):
     require_admin(request)
