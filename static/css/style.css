@@ -65,7 +65,7 @@ header {
 
 .header-text { flex: 1; }
 .header-title { font-size: 1.3rem; font-weight: 800; letter-spacing: .07em; color: var(--accent); line-height: 1; }
-.header-user  { font-size: 1.3rem; font-weight: 800; letter-spacing: .07em; color: var(--primary); opacity: .6; }
+.header-user  { font-size: 1.3rem; font-weight: 800; letter-spacing: .07em; color: var(--accent); opacity: .7; }
 .header-sub   { font-size: .68rem; opacity: .55; margin-top: 2px; font-weight: 500; }
 .header-date  { font-size: .75rem; opacity: .65; text-align: right; line-height: 1.4; font-weight: 500; }
 
