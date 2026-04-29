@@ -524,8 +524,13 @@ function initCompEnd() {
 // ─────────────────────────────────────────────────────────────
 function initEntrainement() {
   document.getElementById('btnNouvelEntr').addEventListener('click', () => {
-    document.getElementById('notesArea').value = '';
-    S.micBaseText = '';
+    const now = new Date();
+    const dd = String(now.getDate()).padStart(2, '0');
+    const mm = String(now.getMonth() + 1).padStart(2, '0');
+    const hh = String(now.getHours()).padStart(2, '0');
+    const min = String(now.getMinutes()).padStart(2, '0');
+    document.getElementById('notesArea').value = `${dd}/${mm} ${hh}:${min} — `;
+    S.micBaseText = document.getElementById('notesArea').value;
     setFeedback('feedback', '', '');
     showScreen('entr', 'form');
   });

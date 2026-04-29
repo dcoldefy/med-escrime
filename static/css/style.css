@@ -90,6 +90,7 @@ header {
   margin-bottom: 14px;
 }
 .screen-title { font-size: 1.05rem; font-weight: 800; color: var(--primary); flex: 1; }
+.form-hint { font-size: 0.75rem; color: var(--muted); margin: -8px 0 12px; font-style: italic; }
 
 .btn-back {
   width: 34px; height: 34px; border-radius: 50%; border: 2px solid var(--border);
