@@ -8,7 +8,7 @@ Application web PWA de suivi et analyse d'assaults d'escrime.
 - **Frontend** : HTML5 / CSS3 / JavaScript vanilla (PWA)
 - **Dictée vocale** : Web Speech API (`lang = 'fr-FR'`)
 - **Port** : 8002
-- **Déploiement** : Raspberry Pi via Tailscale + systemd + SSL
+- **Déploiement** : Raspberry Pi via Tailscale Funnel + systemd (HTTPS géré par Funnel)
 
 ## Structure du projet
 
@@ -56,8 +56,8 @@ git push origin main
 cd ~/med-escrime && git pull
 sudo systemctl restart med-escrime
 
-# 3. Accès via Tailscale
-https://survalerte.tail57ebcb.ts.net:8002
+# 3. Accès via Tailscale Funnel (HTTPS sur port 443)
+https://survalerte.tail57ebcb.ts.net
 ```
 
 ## Service systemd (Raspberry Pi)
@@ -72,13 +72,20 @@ After=network.target
 [Service]
 User=david
 WorkingDirectory=/home/david/med-escrime
-ExecStart=/home/david/.venv/bin/uvicorn app:app --host 0.0.0.0 --port 8002 \
-  --ssl-certfile /home/david/survalerte.tail57ebcb.ts.net.crt \
-  --ssl-keyfile /home/david/survalerte.tail57ebcb.ts.net.key
+ExecStart=/home/david/.venv/bin/uvicorn app:app --host 127.0.0.1 --port 8002
 Restart=always
 
 [Install]
 WantedBy=multi-user.target
+```
+
+## Tailscale Funnel (Raspberry Pi — à configurer une fois)
+
+MED Escrime est exposé sur le port public **443** (HTTPS standard, géré par Tailscale) :
+
+```bash
+tailscale funnel --bg 443 http://localhost:8002
+# Vérifier : tailscale funnel status
 ```
 
 ## Base de données
@@ -87,6 +94,6 @@ SQLite : `db/med.db` (créée automatiquement au démarrage via `database.init_d
 
 ## Notes
 
-- Pas d'authentification (usage privé sur réseau Tailscale)
+- Authentification par token (Funnel expose l'app sur internet public)
 - Modèle de données assault à étendre selon les besoins
 - Module d'analyse à développer ultérieurement
