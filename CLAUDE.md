@@ -84,7 +84,7 @@ WantedBy=multi-user.target
 MED Escrime est exposé sur le port public **443** (HTTPS standard, géré par Tailscale) :
 
 ```bash
-tailscale funnel --bg 443 http://localhost:8002
+tailscale funnel --bg --https=443 http://localhost:8002
 # Vérifier : tailscale funnel status
 ```
 
