@@ -70,6 +70,13 @@ def admin_page(request: Request, db: Session = Depends(database.get_db)):
     return templates.TemplateResponse("admin.html", {"request": request, "users": users})
 
 
+@app.get("/admin/data")
+def data_page(request: Request, db: Session = Depends(database.get_db)):
+    require_admin(request)
+    users = db.query(database.User).order_by(database.User.created_at).all()
+    return templates.TemplateResponse("data.html", {"request": request, "users": users})
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 #  Admin — gestion utilisateurs
 # ─────────────────────────────────────────────────────────────────────────────
@@ -96,6 +103,58 @@ def list_users(request: Request, db: Session = Depends(database.get_db)):
     require_admin(request)
     users = db.query(database.User).order_by(database.User.created_at).all()
     return [_user_dict(u) for u in users]
+
+
+@app.get("/api/admin/users/{user_id}/competitions")
+def admin_list_competitions(user_id: int, request: Request, db: Session = Depends(database.get_db)):
+    require_admin(request)
+    rows = (
+        db.query(database.Competition)
+        .filter(database.Competition.user_id == user_id)
+        .order_by(database.Competition.date.desc())
+        .all()
+    )
+    return [_competition_dict(c) for c in rows]
+
+
+@app.get("/api/admin/users/{user_id}/assaults")
+def admin_list_assaults(user_id: int, request: Request, db: Session = Depends(database.get_db)):
+    require_admin(request)
+    rows = (
+        db.query(database.Assault)
+        .filter(database.Assault.user_id == user_id)
+        .order_by(database.Assault.date.desc())
+        .all()
+    )
+    return [_assault_dict(a) for a in rows]
+
+
+@app.get("/api/admin/competitions/{comp_id}/detail")
+def admin_competition_detail(comp_id: int, request: Request, db: Session = Depends(database.get_db)):
+    require_admin(request)
+    c = _get_or_404(db, database.Competition, comp_id)
+    result = _competition_dict(c)
+
+    p = db.query(database.Poule).filter(database.Poule.competition_id == comp_id).first()
+    if p:
+        assaults_poule = (
+            db.query(database.AssaultPoule)
+            .filter(database.AssaultPoule.poule_id == p.id)
+            .order_by(database.AssaultPoule.numero)
+            .all()
+        )
+        result["poule"] = {**_poule_dict(p), "assaults": [_assault_poule_dict(a) for a in assaults_poule]}
+    else:
+        result["poule"] = None
+
+    tableau = (
+        db.query(database.AssaultTableau)
+        .filter(database.AssaultTableau.competition_id == comp_id)
+        .order_by(database.AssaultTableau.tour)
+        .all()
+    )
+    result["tableau"] = [_assault_tableau_dict(a) for a in tableau]
+    return result
 
 
 @app.delete("/api/admin/users/{user_id}")

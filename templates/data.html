@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MED — Données utilisateurs</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', sans-serif; background: #f0f4f8; color: #1e3a5f; min-height: 100vh; }
+
+    header {
+      background: #1e3a5f; color: white; padding: 14px 20px;
+      display: flex; align-items: center; gap: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,.22);
+    }
+    .logo { width: 36px; height: 36px; background: #d4a017; border-radius: 9px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .logo svg { width: 22px; height: 22px; fill: #1e3a5f; }
+    .header-text { flex: 1; }
+    .header-title { font-size: 1.1rem; font-weight: 800; color: #d4a017; letter-spacing: .05em; line-height: 1; }
+    .header-sub { font-size: .68rem; opacity: .55; font-weight: 500; margin-top: 2px; }
+    .back-link { color: rgba(255,255,255,.6); text-decoration: none; font-size: .82rem; font-weight: 600; display: flex; align-items: center; gap: 4px; }
+    .back-link:hover { color: white; }
+
+    .user-bar { background: white; padding: 12px 16px; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+    .user-bar-label { font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: #6b7a90; margin-bottom: 8px; }
+    .user-pills { display: flex; gap: 8px; flex-wrap: wrap; }
+    .user-pill {
+      padding: 7px 16px; border: 2px solid #e2e8f0; border-radius: 20px;
+      background: white; color: #6b7a90; font-family: inherit; font-size: .85rem;
+      font-weight: 700; cursor: pointer; transition: all .2s;
+    }
+    .user-pill.active { border-color: #1e3a5f; background: #1e3a5f; color: white; }
+    .user-pill:hover:not(.active) { border-color: #1e3a5f; color: #1e3a5f; }
+
+    .content { padding: 16px; max-width: 680px; margin: 0 auto; }
+
+    .no-user { text-align: center; padding: 64px 20px; color: #6b7a90; }
+    .no-user svg { opacity: .3; margin-bottom: 12px; }
+    .no-user p { font-size: .95rem; }
+
+    .loading-msg { text-align: center; padding: 40px; color: #6b7a90; font-size: .9rem; }
+
+    /* Stats grid */
+    .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 16px; }
+    .stat-card { background: white; border-radius: 12px; padding: 16px 14px; box-shadow: 0 2px 8px rgba(0,0,0,.08); text-align: center; }
+    .stat-val { font-size: 2rem; font-weight: 800; color: #1e3a5f; line-height: 1; }
+    .stat-label { font-size: .68rem; text-transform: uppercase; letter-spacing: .07em; color: #6b7a90; font-weight: 700; margin-top: 5px; }
+    .stat-sub { font-size: .75rem; color: #6b7a90; margin-top: 3px; }
+    .stat-val.accent { color: #d4a017; }
+    .stat-val.success { color: #27ae60; }
+
+    /* Win rate */
+    .win-bar { height: 5px; background: #e2e8f0; border-radius: 3px; overflow: hidden; margin-top: 6px; }
+    .win-bar-fill { height: 100%; background: #27ae60; border-radius: 3px; transition: width .6s ease; }
+
+    /* Section card */
+    .section-card { background: white; border-radius: 12px; padding: 16px; box-shadow: 0 2px 8px rgba(0,0,0,.08); margin-bottom: 14px; }
+    .section-title { font-size: .68rem; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; color: #6b7a90; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #f0f4f8; }
+
+    /* Comp items */
+    .comp-item { border: 1px solid #e2e8f0; border-radius: 10px; margin-bottom: 8px; overflow: hidden; }
+    .comp-item:last-child { margin-bottom: 0; }
+    .comp-head { display: flex; align-items: center; gap: 10px; padding: 10px 12px; cursor: pointer; background: #f8fafc; transition: background .15s; }
+    .comp-head:hover { background: #eef2f8; }
+    .comp-date-col { text-align: center; min-width: 36px; flex-shrink: 0; }
+    .comp-day { font-size: 1.2rem; font-weight: 800; color: #1e3a5f; line-height: 1; }
+    .comp-mon { font-size: .6rem; text-transform: uppercase; color: #6b7a90; font-weight: 600; }
+    .comp-info { flex: 1; min-width: 0; }
+    .comp-name { font-size: .9rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .comp-meta-txt { font-size: .72rem; color: #6b7a90; margin-top: 2px; }
+
+    .badge { padding: 2px 8px; border-radius: 20px; font-size: .65rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; flex-shrink: 0; }
+    .badge-done { background: #e2e8f0; color: #6b7a90; }
+    .badge-ongoing { background: #fef3e2; color: #8a5c00; }
+    .badge-win { background: #d4edda; color: #1a7a3c; }
+    .badge-loss { background: #f8d7da; color: #c0392b; }
+
+    .chevron { width: 16px; height: 16px; color: #6b7a90; flex-shrink: 0; transition: transform .25s; }
+    .chevron.open { transform: rotate(180deg); }
+
+    .comp-body { padding: 12px; border-top: 1px solid #e2e8f0; display: none; }
+    .comp-body.open { display: block; }
+
+    .sub-title { font-size: .68rem; font-weight: 800; text-transform: uppercase; letter-spacing: .07em; color: #6b7a90; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; }
+
+    /* Assault mini rows */
+    .assault-mini { display: flex; align-items: center; gap: 8px; padding: 6px 8px; background: #f8fafc; border-radius: 7px; margin-bottom: 4px; font-size: .83rem; }
+    .assault-mini:last-child { margin-bottom: 0; }
+    .a-num { font-size: .68rem; font-weight: 800; color: #6b7a90; min-width: 44px; flex-shrink: 0; }
+    .a-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+    .a-dot.v { background: #27ae60; }
+    .a-dot.d { background: #c0392b; }
+    .a-dot.u { background: #cbd5e0; }
+    .a-adv { flex: 1; font-weight: 600; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .a-score { font-size: .75rem; color: #6b7a90; flex-shrink: 0; }
+
+    /* Training rows */
+    .training-row { display: flex; align-items: flex-start; gap: 12px; padding: 10px 0; border-bottom: 1px solid #f0f4f8; }
+    .training-row:last-child { border-bottom: none; }
+    .t-date { min-width: 42px; text-align: center; flex-shrink: 0; }
+    .t-day { font-size: 1.15rem; font-weight: 800; color: #1e3a5f; line-height: 1; }
+    .t-mon { font-size: .6rem; text-transform: uppercase; color: #6b7a90; font-weight: 600; }
+    .t-body { flex: 1; min-width: 0; }
+    .t-time { font-size: .7rem; color: #6b7a90; margin-bottom: 2px; }
+    .t-notes { font-size: .87rem; line-height: 1.5; white-space: pre-wrap; word-break: break-word; }
+    .t-notes.empty { color: #6b7a90; font-style: italic; }
+
+    .empty-state { text-align: center; padding: 18px; color: #6b7a90; font-style: italic; font-size: .88rem; }
+
+    .user-section-title { font-size: 1.05rem; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; margin-top: 4px; display: flex; align-items: center; gap: 10px; }
+    .user-since { font-size: .72rem; color: #6b7a90; font-weight: 500; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <path d="M20.5 3.5 3.5 20.5M3.5 3.5l4 4M7.5 7.5l9 9M16.5 16.5l4 4" stroke="#1e3a5f" stroke-width="2" stroke-linecap="round" fill="none"/>
+    </svg>
+  </div>
+  <div class="header-text">
+    <div class="header-title">MED — Données</div>
+    <div class="header-sub">Consultation par utilisateur</div>
+  </div>
+  <a class="back-link" href="/admin">
+    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"/>
+    </svg>
+    Admin
+  </a>
+</header>
+
+<div class="user-bar">
+  <div class="user-bar-label">Utilisateur</div>
+  <div class="user-pills">
+    {% for u in users %}
+    <button class="user-pill" data-id="{{ u.id }}" onclick="selectUser({{ u.id }}, '{{ u.name }}', '{{ u.created_at.strftime('%d/%m/%Y') if u.created_at else '' }}')">{{ u.name }}</button>
+    {% endfor %}
+    {% if not users %}
+    <span style="color:#6b7a90;font-style:italic;font-size:.88rem">Aucun utilisateur.</span>
+    {% endif %}
+  </div>
+</div>
+
+<div class="content">
+  <div class="no-user" id="noUser">
+    <svg xmlns="http://www.w3.org/2000/svg" width="52" height="52" fill="none" stroke="currentColor" stroke-width="1.2" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.5 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.5-1.632Z"/>
+    </svg>
+    <p>Sélectionnez un utilisateur pour consulter ses données.</p>
+  </div>
+  <div id="userData" style="display:none"></div>
+</div>
+
+<script>
+const MONTHS = ['jan','fév','mar','avr','mai','jun','jul','aoû','sep','oct','nov','déc'];
+
+function fmtDate(s) {
+  const d = new Date(s + 'T00:00:00');
+  return { day: d.getDate(), mon: MONTHS[d.getMonth()], year: d.getFullYear() };
+}
+
+function esc(s) {
+  return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+async function selectUser(id, name, since) {
+  document.querySelectorAll('.user-pill').forEach(p => p.classList.toggle('active', +p.dataset.id === id));
+  document.getElementById('noUser').style.display = 'none';
+  const box = document.getElementById('userData');
+  box.style.display = 'block';
+  box.innerHTML = '<div class="loading-msg">Chargement…</div>';
+
+  try {
+    const [r1, r2] = await Promise.all([
+      fetch(`/api/admin/users/${id}/competitions`),
+      fetch(`/api/admin/users/${id}/assaults`),
+    ]);
+    if (!r1.ok || !r2.ok) throw new Error();
+    const [comps, assaults] = await Promise.all([r1.json(), r2.json()]);
+    render(box, id, name, since, comps, assaults);
+  } catch {
+    box.innerHTML = '<div class="loading-msg">Erreur lors du chargement.</div>';
+  }
+}
+
+function render(box, id, name, since, comps, assaults) {
+  const nbDone = comps.filter(c => c.terminee).length;
+  const nbOngoing = comps.length - nbDone;
+
+  box.innerHTML = `
+    <div class="user-section-title">
+      ${esc(name)}
+      ${since ? `<span class="user-since">depuis le ${esc(since)}</span>` : ''}
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-val">${assaults.length}</div>
+        <div class="stat-label">Entraînements</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val accent">${comps.length}</div>
+        <div class="stat-label">Compétitions</div>
+        <div class="stat-sub">${nbDone} terminée${nbDone>1?'s':''} · ${nbOngoing} en cours</div>
+      </div>
+    </div>
+
+    <div class="section-card">
+      <div class="section-title">Compétitions (${comps.length})</div>
+      <div id="compList">
+        ${comps.length ? comps.map(compCard).join('') : '<div class="empty-state">Aucune compétition.</div>'}
+      </div>
+    </div>
+
+    <div class="section-card">
+      <div class="section-title">Entraînements (${assaults.length})</div>
+      <div>
+        ${assaults.length ? assaults.map(trainingRow).join('') : '<div class="empty-state">Aucune séance.</div>'}
+      </div>
+    </div>
+  `;
+}
+
+function compCard(c) {
+  const d = fmtDate(c.date);
+  const ARMES = { epee: 'Épée', sabre: 'Sabre', fleuret: 'Fleuret' };
+  const statusBadge = c.terminee
+    ? '<span class="badge badge-done">Terminée</span>'
+    : '<span class="badge badge-ongoing">En cours</span>';
+
+  return `
+    <div class="comp-item" id="ci-${c.id}">
+      <div class="comp-head" onclick="toggleComp(${c.id})">
+        <div class="comp-date-col">
+          <div class="comp-day">${d.day}</div>
+          <div class="comp-mon">${d.mon} ${d.year}</div>
+        </div>
+        <div class="comp-info">
+          <div class="comp-name">${esc(c.nom)}</div>
+          <div class="comp-meta-txt">${ARMES[c.arme]||esc(c.arme)} · ${esc(c.niveau)}${c.ville ? ' · ' + esc(c.ville) : ''}</div>
+        </div>
+        ${statusBadge}
+        <svg class="chevron" id="chv-${c.id}" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="m19 9-7 7-7-7"/>
+        </svg>
+      </div>
+      <div class="comp-body" id="cb-${c.id}">
+        <div style="color:#6b7a90;font-style:italic;font-size:.82rem">Chargement…</div>
+      </div>
+    </div>`;
+}
+
+function trainingRow(a) {
+  const d = fmtDate(a.date);
+  const time = (a.heure || '').slice(0, 5);
+  return `
+    <div class="training-row">
+      <div class="t-date">
+        <div class="t-day">${d.day}</div>
+        <div class="t-mon">${d.mon} ${d.year}</div>
+      </div>
+      <div class="t-body">
+        ${time ? `<div class="t-time">${esc(time)}</div>` : ''}
+        <div class="t-notes ${a.notes ? '' : 'empty'}">${a.notes ? esc(a.notes) : 'Pas de notes'}</div>
+      </div>
+    </div>`;
+}
+
+async function toggleComp(cid) {
+  const body = document.getElementById(`cb-${cid}`);
+  const chv  = document.getElementById(`chv-${cid}`);
+  const isOpen = body.classList.contains('open');
+  if (isOpen) { body.classList.remove('open'); chv.classList.remove('open'); return; }
+  body.classList.add('open'); chv.classList.add('open');
+  if (body.dataset.loaded) return;
+  body.dataset.loaded = '1';
+
+  try {
+    const r = await fetch(`/api/admin/competitions/${cid}/detail`);
+    if (!r.ok) throw new Error();
+    renderCompDetail(body, await r.json());
+  } catch {
+    body.innerHTML = '<div style="color:#c0392b;font-size:.82rem">Erreur de chargement.</div>';
+  }
+}
+
+function renderCompDetail(el, d) {
+  let html = '';
+
+  if (d.etat_de_forme) {
+    html += `<div style="margin-bottom:12px">
+      <div class="sub-title">État de forme</div>
+      <div style="font-size:.85rem;line-height:1.5">${esc(d.etat_de_forme)}</div>
+    </div>`;
+  }
+
+  if (d.a_poule && d.poule) {
+    const p = d.poule;
+    const as = p.assaults || [];
+    const wins = as.filter(a => a.victoire === true).length;
+    const losses = as.filter(a => a.victoire === false).length;
+    const done = as.filter(a => a.victoire !== null).length;
+    const qualBadge = p.qualifie === true ? '<span class="badge badge-win">Qualifié</span>'
+                    : p.qualifie === false ? '<span class="badge badge-loss">Éliminé</span>' : '';
+    html += `<div style="margin-bottom:14px">
+      <div class="sub-title">Poule — ${p.nb_tireurs} tireurs ${qualBadge}</div>
+      ${done > 0 ? `<div style="font-size:.78rem;color:#6b7a90;margin-bottom:4px">${wins}V – ${losses}D (${Math.round(wins/done*100)} %)</div>
+        <div class="win-bar"><div class="win-bar-fill" style="width:${Math.round(wins/done*100)}%"></div></div>` : ''}
+      <div style="margin-top:8px">
+        ${as.length ? as.map(a => `
+          <div class="assault-mini">
+            <span class="a-num">Ass. ${a.numero}</span>
+            <div class="a-dot ${a.victoire===true?'v':a.victoire===false?'d':'u'}"></div>
+            <span class="a-adv">${esc(a.adversaire||'—')}</span>
+            <span class="a-score">${a.score_moi!==null ? a.score_moi+' – '+a.score_adversaire : '—'}</span>
+          </div>`).join('') : '<div class="empty-state" style="padding:6px 0">Aucun assault saisi.</div>'}
+      </div>
+    </div>`;
+  }
+
+  if (d.a_tableau && d.tableau && d.tableau.length) {
+    html += `<div style="margin-bottom:12px">
+      <div class="sub-title">Tableau direct</div>
+      ${d.tableau.map(t => `
+        <div class="assault-mini">
+          <span class="a-num">Tour ${t.tour}</span>
+          <div class="a-dot ${t.victoire===true?'v':t.victoire===false?'d':'u'}"></div>
+          <span class="a-adv">${esc(t.adversaire||'—')}</span>
+          <span class="a-score">${t.score_moi!==null ? t.score_moi+' – '+t.score_adversaire : '—'}</span>
+        </div>`).join('')}
+    </div>`;
+  }
+
+  if (d.notes_analyse) {
+    html += `<div>
+      <div class="sub-title">Analyse</div>
+      <div style="font-size:.85rem;line-height:1.5;white-space:pre-wrap">${esc(d.notes_analyse)}</div>
+    </div>`;
+  }
+
+  el.innerHTML = html || '<div class="empty-state">Aucun détail disponible.</div>';
+}
+</script>
+</body>
+</html>
