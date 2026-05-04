@@ -255,7 +255,7 @@ async function saveComp() {
     const c = await api('/api/competitions', { method: 'POST', body: payload });
     S.comp = c;
     loadComps();
-    startCompWorkflow(c);
+    await startCompWorkflow(c);
   } catch (e) {
     setFeedback('feedbackComp', 'Erreur : ' + e.message, 'error');
   }
@@ -267,21 +267,56 @@ async function resumeComp(id) {
     const c = await api(`/api/competitions/${id}`);
     S.comp = c;
     if (c.terminee) { openCompDetail(id); return; }
-    startCompWorkflow(c);
+    await startCompWorkflow(c);
   } catch { alert('Impossible de charger la compétition.'); }
 }
 
-function startCompWorkflow(c) {
+async function startCompWorkflow(c) {
   if (c.a_poule) {
-    document.getElementById('pouleSetupTitle').textContent = `Poule — ${esc(c.nom)}`;
-    showScreen('comp', 'poule-setup');
-  } else if (c.a_tableau) {
+    // Vérifie si une poule existe déjà pour ne pas en créer une nouvelle par erreur
+    let poule = null;
+    try { poule = await api(`/api/competitions/${c.id}/poule`); } catch {}
+
+    if (!poule) {
+      document.getElementById('pouleSetupTitle').textContent = `Poule — ${esc(c.nom)}`;
+      showScreen('comp', 'poule-setup');
+      return;
+    }
+
+    S.poule = poule;
+
+    if (poule.terminee) {
+      if (!poule.qualifie) { finishComp(false); return; }
+      if (c.a_tableau) {
+        document.getElementById('tableauSetupTitle').textContent = `Tableau — ${esc(c.nom)}`;
+        showScreen('comp', 'tableau-setup');
+      } else {
+        finishComp(true);
+      }
+      return;
+    }
+
+    // Poule en cours : reprendre à l'assault suivant
+    let existingAssaults = [];
+    try { existingAssaults = await api(`/api/poules/${poule.id}/assaults`); } catch {}
+    S.pouleIndex = existingAssaults.length + 1;
+    if (S.pouleIndex > poule.nb_assaults) {
+      setActive('qualifToggle', null);
+      showScreen('comp', 'poule-end');
+    } else {
+      showPouleAssault();
+    }
+    return;
+  }
+
+  if (c.a_tableau) {
     document.getElementById('tableauSetupTitle').textContent = `Tableau — ${esc(c.nom)}`;
     showScreen('comp', 'tableau-setup');
-  } else {
-    showScreen('comp', 'end');
-    finishComp(false);
+    return;
   }
+
+  showScreen('comp', 'end');
+  finishComp(false);
 }
 
 // ─────────────────────────────────────────────────────────────
