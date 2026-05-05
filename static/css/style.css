@@ -111,6 +111,16 @@ header {
 }
 .btn-add svg { width: 14px; height: 14px; }
 .btn-add:hover { background: var(--primary-d); }
+
+.btn-export {
+  width: 34px; height: 34px; border-radius: 50%;
+  border: 1.5px solid var(--border); background: var(--card);
+  color: var(--muted); cursor: pointer; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  transition: border-color .2s, color .2s;
+}
+.btn-export svg { width: 16px; height: 16px; }
+.btn-export:hover { border-color: var(--success); color: var(--success); }
 .btn-add-lecon { background: #2d6a4f; }
 .btn-add-lecon:hover { background: #1f4d38; }
 

@@ -62,6 +62,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initEntrDetail();
   initLeconForm();
   initLeconDetail();
+  initExport();
   loadComps();
   loadEntrainement();
   loadHistorique();
@@ -817,6 +818,38 @@ function renderHistoComp(c) {
       <div class="assault-notes">${esc(c.nom)}${c.ville ? ` — ${esc(c.ville)}` : ''}</div>
     </div>
   </div>`;
+}
+
+// ─────────────────────────────────────────────────────────────
+//  EXPORT XLSX
+// ─────────────────────────────────────────────────────────────
+function initExport() {
+  document.getElementById('btnExportComps').addEventListener('click', () => {
+    const d = new Date().toLocaleDateString('fr-CA');
+    downloadExport('/api/export/competitions', `med_competitions_${d}.xlsx`);
+  });
+  document.getElementById('btnExportEntr').addEventListener('click', () => {
+    const d = new Date().toLocaleDateString('fr-CA');
+    downloadExport('/api/export/entrainement', `med_entrainement_${d}.xlsx`);
+  });
+}
+
+async function downloadExport(endpoint, filename) {
+  try {
+    const token = localStorage.getItem('med_token');
+    const res = await fetch(endpoint, { headers: { 'X-User-Token': token } });
+    if (!res.ok) throw new Error(await res.text());
+    const blob = await res.blob();
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(a.href);
+  } catch (e) {
+    alert('Erreur export : ' + e.message);
+  }
 }
 
 // ─────────────────────────────────────────────────────────────
