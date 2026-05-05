@@ -257,6 +257,97 @@ def delete_assault(
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+#  Leçons
+# ─────────────────────────────────────────────────────────────────────────────
+
+class LeconPayload(BaseModel):
+    date: str
+    heure: str
+    maitre: Optional[str] = ""
+    theme: Optional[str] = ""
+    notes: Optional[str] = ""
+
+
+@app.post("/api/lecons")
+def create_lecon(
+    payload: LeconPayload,
+    db: Session = Depends(database.get_db),
+    user: database.User = Depends(get_current_user),
+):
+    l = database.Lecon(
+        user_id=user.id,
+        date=dt_date.fromisoformat(payload.date),
+        heure=dt_time.fromisoformat(payload.heure),
+        maitre=payload.maitre.strip() if payload.maitre else "",
+        theme=payload.theme.strip() if payload.theme else "",
+        notes=payload.notes.strip() if payload.notes else "",
+    )
+    db.add(l)
+    db.commit()
+    db.refresh(l)
+    return _lecon_dict(l)
+
+
+@app.get("/api/lecons")
+def list_lecons(
+    db: Session = Depends(database.get_db),
+    user: database.User = Depends(get_current_user),
+):
+    rows = (
+        db.query(database.Lecon)
+        .filter(database.Lecon.user_id == user.id)
+        .order_by(database.Lecon.date.desc(), database.Lecon.heure.desc())
+        .all()
+    )
+    return [_lecon_dict(l) for l in rows]
+
+
+@app.get("/api/lecons/{lecon_id}")
+def get_lecon(
+    lecon_id: int,
+    db: Session = Depends(database.get_db),
+    user: database.User = Depends(get_current_user),
+):
+    l = _get_or_404(db, database.Lecon, lecon_id)
+    _check_owner(l.user_id, user.id)
+    return _lecon_dict(l)
+
+
+@app.patch("/api/lecons/{lecon_id}")
+def patch_lecon(
+    lecon_id: int,
+    data: dict,
+    db: Session = Depends(database.get_db),
+    user: database.User = Depends(get_current_user),
+):
+    l = _get_or_404(db, database.Lecon, lecon_id)
+    _check_owner(l.user_id, user.id)
+    for k, v in data.items():
+        if k == "date":
+            l.date = dt_date.fromisoformat(v)
+        elif k == "heure":
+            l.heure = dt_time.fromisoformat(v)
+        elif k in {"maitre", "theme", "notes"}:
+            setattr(l, k, v)
+    db.commit()
+    db.refresh(l)
+    return _lecon_dict(l)
+
+
+@app.delete("/api/lecons/{lecon_id}")
+def delete_lecon(
+    lecon_id: int,
+    db: Session = Depends(database.get_db),
+    user: database.User = Depends(get_current_user),
+):
+    l = _get_or_404(db, database.Lecon, lecon_id)
+    _check_owner(l.user_id, user.id)
+    db.delete(l)
+    db.commit()
+    return {"ok": True}
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 #  Compétitions
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -608,6 +699,13 @@ def _check_owner(resource_user_id: int, current_user_id: int):
 def _user_dict(u: database.User) -> dict:
     return {"id": u.id, "name": u.name, "token": u.token,
             "created_at": u.created_at.isoformat() if u.created_at else None}
+
+
+def _lecon_dict(l: database.Lecon) -> dict:
+    return {
+        "id": l.id, "date": str(l.date), "heure": str(l.heure),
+        "maitre": l.maitre or "", "theme": l.theme or "", "notes": l.notes or "",
+    }
 
 
 def _assault_dict(a: database.Assault) -> dict:

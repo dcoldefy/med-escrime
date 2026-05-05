@@ -487,7 +487,11 @@
       <h2 class="screen-title">Entraînement</h2>
       <button class="btn-add" id="btnNouvelEntr">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        Nouvel assault
+        Assault
+      </button>
+      <button class="btn-add btn-add-lecon" id="btnNouvelleLecon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Leçon
       </button>
     </div>
     <div class="card-list" id="listAssaults"><p class="empty-msg">Chargement…</p></div>
@@ -527,6 +531,105 @@
       </div>
       <button class="save-btn" id="btnSaveEntrDetail">Enregistrer</button>
       <div class="feedback" id="feedbackEntrDetail"></div>
+    </div>
+  </div>
+
+  <!-- Formulaire nouvelle leçon -->
+  <div id="screen-entr-lecon-form" class="hidden">
+    <div class="screen-header">
+      <button class="btn-back" onclick="showScreen('entr','list')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15,18 9,12 15,6"/></svg>
+      </button>
+      <div class="screen-header-text">
+        <h2 class="screen-title">Nouvelle leçon</h2>
+        <p class="form-hint">Enregistrez votre leçon avec le maître d'arme</p>
+      </div>
+    </div>
+    <div class="form-card" style="margin-top:10px;">
+      <div class="field-row">
+        <div class="field-group">
+          <label class="field-label">Date</label>
+          <input type="date" id="leconDate" class="field-input" />
+        </div>
+        <div class="field-group">
+          <label class="field-label">Heure</label>
+          <input type="time" id="leconHeure" class="field-input" />
+        </div>
+      </div>
+      <div class="field-group">
+        <label class="field-label">Maître d'arme <span class="opt">(optionnel)</span></label>
+        <input type="text" id="leconMaitre" class="field-input" placeholder="Nom du maître d'arme" />
+      </div>
+      <div class="field-group">
+        <label class="field-label">Thème <span class="opt">(optionnel)</span></label>
+        <input type="text" id="leconTheme" class="field-input" placeholder="Ex : travail de la pointe, esquives…" />
+      </div>
+      <div class="field-group">
+        <label class="field-label">Notes</label>
+        <div class="notes-area">
+          <textarea id="leconNotes" class="field-textarea" placeholder="Exercices, observations…"></textarea>
+          <button class="mic-btn" id="micLecon" title="Dicter">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="9" y="2" width="6" height="11" rx="3"/>
+              <path d="M19 10a7 7 0 0 1-14 0"/>
+              <line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+      <button class="save-btn" id="btnSaveLecon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+          <polyline points="17,21 17,13 7,13"/><polyline points="7,3 7,8 15,8"/>
+        </svg>
+        Enregistrer la leçon
+      </button>
+      <div class="feedback" id="feedbackLecon"></div>
+    </div>
+  </div>
+
+  <!-- Détail / édition d'une leçon -->
+  <div id="screen-entr-lecon-detail" class="hidden">
+    <div class="screen-header">
+      <button class="btn-back" onclick="showScreen('entr','list')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15,18 9,12 15,6"/></svg>
+      </button>
+      <h2 class="screen-title">Leçon</h2>
+    </div>
+    <div class="form-card">
+      <div class="field-row">
+        <div class="field-group">
+          <label class="field-label">Date</label>
+          <input type="date" id="eLeconDate" class="field-input" />
+        </div>
+        <div class="field-group">
+          <label class="field-label">Heure</label>
+          <input type="time" id="eLeconHeure" class="field-input" />
+        </div>
+      </div>
+      <div class="field-group">
+        <label class="field-label">Maître d'arme</label>
+        <input type="text" id="eLeconMaitre" class="field-input" placeholder="—" />
+      </div>
+      <div class="field-group">
+        <label class="field-label">Thème</label>
+        <input type="text" id="eLeconTheme" class="field-input" placeholder="—" />
+      </div>
+      <div class="field-group">
+        <label class="field-label">Notes</label>
+        <div class="notes-area">
+          <textarea id="eLeconNotes" class="field-textarea" placeholder="—"></textarea>
+          <button class="mic-btn" id="micLeconDetail" title="Dicter">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="9" y="2" width="6" height="11" rx="3"/>
+              <path d="M19 10a7 7 0 0 1-14 0"/>
+              <line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+      <button class="save-btn" id="btnSaveLeconDetail">Enregistrer</button>
+      <div class="feedback" id="feedbackLeconDetail"></div>
     </div>
   </div>
 

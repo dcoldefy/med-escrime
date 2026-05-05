@@ -24,6 +24,19 @@ class User(Base):
 
 # ── Entraînement ─────────────────────────────────────────────────────────────
 
+class Lecon(Base):
+    __tablename__ = "lecons"
+
+    id         = Column(Integer, primary_key=True, index=True)
+    user_id    = Column(Integer, ForeignKey("users.id"), nullable=False)
+    date       = Column(Date, nullable=False)
+    heure      = Column(Time, nullable=False)
+    maitre     = Column(String(100), default="")
+    theme      = Column(String(200), default="")
+    notes      = Column(Text, default="")
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
 class Assault(Base):
     __tablename__ = "assaults"
 

@@ -60,8 +60,10 @@ document.addEventListener('DOMContentLoaded', () => {
   initCompEnd();
   initEntrainement();
   initEntrDetail();
+  initLeconForm();
+  initLeconDetail();
   loadComps();
-  loadAssaults();
+  loadEntrainement();
   loadHistorique();
 });
 
@@ -142,6 +144,8 @@ function initMicAll() {
         'micBtn':          'notesArea',
         'micAnalyse':      'dCompNotes',
         'micEntrDetail':   'eEntrNotes',
+        'micLecon':        'leconNotes',
+        'micLeconDetail':  'eLeconNotes',
       };
       const targetId = map[btn.id];
       if (!targetId) return;
@@ -596,12 +600,25 @@ function initEntrainement() {
   document.getElementById('saveBtn').addEventListener('click', saveAssault);
 }
 
-async function loadAssaults() {
+async function loadEntrainement() {
   const list = document.getElementById('listAssaults');
   try {
-    const data = await api('/api/assaults');
-    if (!data.length) { list.innerHTML = '<p class="empty-msg">Aucun assault enregistré.</p>'; return; }
-    list.innerHTML = data.map(renderAssaultCard).join('');
+    const [assaults, lecons] = await Promise.all([
+      api('/api/assaults'),
+      api('/api/lecons'),
+    ]);
+    const items = [
+      ...assaults.map(a => ({ ...a, _type: 'assault' })),
+      ...lecons.map(l => ({ ...l, _type: 'lecon' })),
+    ].sort((a, b) => {
+      const ka = a.date + 'T' + a.heure;
+      const kb = b.date + 'T' + b.heure;
+      return kb.localeCompare(ka);
+    });
+    if (!items.length) { list.innerHTML = '<p class="empty-msg">Aucun élément enregistré.</p>'; return; }
+    list.innerHTML = items.map(it =>
+      it._type === 'assault' ? renderAssaultCard(it) : renderLeconCard(it)
+    ).join('');
   } catch { list.innerHTML = '<p class="empty-msg" style="color:var(--danger)">Erreur.</p>'; }
 }
 
@@ -618,7 +635,7 @@ async function saveAssault() {
     S.micBaseText = '';
     setFeedback('feedback', 'Assault enregistré !', 'ok');
     setTimeout(() => setFeedback('feedback', '', ''), 3000);
-    loadAssaults();
+    loadEntrainement();
     showScreen('entr', 'list');
   } catch (e) {
     setFeedback('feedback', 'Erreur : ' + e.message, 'error');
@@ -647,7 +664,109 @@ async function deleteAssault(id) {
   document.getElementById('assault-' + id)?.remove();
   const list = document.getElementById('listAssaults');
   if (!list.querySelector('.assault-card'))
-    list.innerHTML = '<p class="empty-msg">Aucun assault enregistré.</p>';
+    list.innerHTML = '<p class="empty-msg">Aucun élément enregistré.</p>';
+}
+
+// ─────────────────────────────────────────────────────────────
+//  LEÇONS
+// ─────────────────────────────────────────────────────────────
+function initLeconForm() {
+  document.getElementById('btnNouvelleLecon').addEventListener('click', () => {
+    const now = new Date();
+    document.getElementById('leconDate').value  = now.toLocaleDateString('fr-CA');
+    document.getElementById('leconHeure').value = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+    document.getElementById('leconMaitre').value = '';
+    document.getElementById('leconTheme').value  = '';
+    document.getElementById('leconNotes').value  = '';
+    S.micBaseText = '';
+    setFeedback('feedbackLecon', '', '');
+    showScreen('entr', 'lecon-form');
+  });
+  document.getElementById('btnSaveLecon').addEventListener('click', saveLecon);
+}
+
+async function saveLecon() {
+  const date   = document.getElementById('leconDate').value;
+  const heure  = document.getElementById('leconHeure').value;
+  const maitre = document.getElementById('leconMaitre').value.trim();
+  const theme  = document.getElementById('leconTheme').value.trim();
+  const notes  = document.getElementById('leconNotes').value.trim();
+  setFeedback('feedbackLecon', '', '');
+  try {
+    await api('/api/lecons', {
+      method: 'POST',
+      body: { date, heure: heure + ':00', maitre, theme, notes }
+    });
+    setFeedback('feedbackLecon', 'Leçon enregistrée !', 'ok');
+    setTimeout(() => setFeedback('feedbackLecon', '', ''), 3000);
+    loadEntrainement();
+    showScreen('entr', 'list');
+  } catch (e) {
+    setFeedback('feedbackLecon', 'Erreur : ' + e.message, 'error');
+  }
+}
+
+function renderLeconCard(l) {
+  const date     = new Date(l.date + 'T00:00:00').toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+  const heure    = l.heure.slice(0, 5);
+  const subtitle = [l.maitre, l.theme].filter(Boolean).join(' · ');
+  const body     = subtitle || l.notes.slice(0, 80);
+  return `<div class="assault-card lecon-card" id="lecon-${l.id}" onclick="openLeconDetail(${l.id})" style="cursor:pointer; border-left-color:#2d6a4f">
+    <div class="assault-meta">
+      <span class="assault-time">${heure}</span>
+      <span class="assault-badge badge-lecon">Leçon</span>
+    </div>
+    <div class="assault-body">
+      <div class="assault-date">${date}</div>
+      <div class="assault-notes${body ? '' : ' empty'}">${body ? esc(body) : 'Aucune note.'}</div>
+    </div>
+    <button class="del-btn" onclick="event.stopPropagation(); deleteLecon(${l.id})" title="Supprimer">${ICO_DEL}</button>
+  </div>`;
+}
+
+async function deleteLecon(id) {
+  if (!confirm('Supprimer cette leçon ?')) return;
+  await api(`/api/lecons/${id}`, { method: 'DELETE' });
+  document.getElementById('lecon-' + id)?.remove();
+  const list = document.getElementById('listAssaults');
+  if (!list.querySelector('.assault-card'))
+    list.innerHTML = '<p class="empty-msg">Aucun élément enregistré.</p>';
+}
+
+function initLeconDetail() {
+  document.getElementById('btnSaveLeconDetail').addEventListener('click', saveLeconDetail);
+}
+
+async function openLeconDetail(id) {
+  try {
+    const l = await api(`/api/lecons/${id}`);
+    S.detailLecon = l;
+    document.getElementById('eLeconDate').value  = l.date;
+    document.getElementById('eLeconHeure').value = l.heure.slice(0, 5);
+    document.getElementById('eLeconMaitre').value = l.maitre;
+    document.getElementById('eLeconTheme').value  = l.theme;
+    document.getElementById('eLeconNotes').value  = l.notes;
+    S.micBaseText = l.notes;
+    setFeedback('feedbackLeconDetail', '', '');
+    showScreen('entr', 'lecon-detail');
+  } catch { alert('Impossible de charger la leçon.'); }
+}
+
+async function saveLeconDetail() {
+  const id     = S.detailLecon.id;
+  const date   = document.getElementById('eLeconDate').value;
+  const heure  = document.getElementById('eLeconHeure').value;
+  const maitre = document.getElementById('eLeconMaitre').value.trim();
+  const theme  = document.getElementById('eLeconTheme').value.trim();
+  const notes  = document.getElementById('eLeconNotes').value.trim();
+  try {
+    await api(`/api/lecons/${id}`, {
+      method: 'PATCH', body: { date, heure: heure + ':00', maitre, theme, notes }
+    });
+    setFeedback('feedbackLeconDetail', 'Enregistré !', 'ok');
+    setTimeout(() => setFeedback('feedbackLeconDetail', '', ''), 3000);
+    loadEntrainement();
+  } catch { setFeedback('feedbackLeconDetail', 'Erreur.', 'error'); }
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -657,20 +776,28 @@ async function loadHistorique() {
   const list = document.getElementById('historyList');
   list.innerHTML = '<p class="empty-msg">Chargement…</p>';
   try {
-    const [comps, assaults] = await Promise.all([
+    const [comps, assaults, lecons] = await Promise.all([
       api('/api/competitions'),
       api('/api/assaults'),
+      api('/api/lecons'),
     ]);
 
     const items = [
       ...comps.map(c => ({ ...c, _type: 'comp', _date: c.date })),
       ...assaults.map(a => ({ ...a, _type: 'assault', _date: a.date })),
-    ].sort((a, b) => b._date.localeCompare(a._date));
+      ...lecons.map(l => ({ ...l, _type: 'lecon', _date: l.date })),
+    ].sort((a, b) => {
+      const ka = b._date + 'T' + (b.heure || '00:00:00');
+      const kb = a._date + 'T' + (a.heure || '00:00:00');
+      return ka.localeCompare(kb);
+    });
 
     if (!items.length) { list.innerHTML = '<p class="empty-msg">Aucun élément.</p>'; return; }
-    list.innerHTML = items.map(it =>
-      it._type === 'comp' ? renderHistoComp(it) : renderAssaultCard(it)
-    ).join('');
+    list.innerHTML = items.map(it => {
+      if (it._type === 'comp')   return renderHistoComp(it);
+      if (it._type === 'lecon')  return renderLeconCard(it);
+      return renderAssaultCard(it);
+    }).join('');
   } catch { list.innerHTML = '<p class="empty-msg" style="color:var(--danger)">Erreur.</p>'; }
 }
 
@@ -1087,6 +1214,6 @@ async function saveEntrDetail() {
     });
     setFeedback('feedbackEntrDetail', 'Enregistré !', 'ok');
     setTimeout(() => setFeedback('feedbackEntrDetail', '', ''), 3000);
-    loadAssaults();
+    loadEntrainement();
   } catch { setFeedback('feedbackEntrDetail', 'Erreur.', 'error'); }
 }
