@@ -110,6 +110,16 @@
 
     .user-section-title { font-size: 1.05rem; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; margin-top: 4px; display: flex; align-items: center; gap: 10px; }
     .user-since { font-size: .72rem; color: #6b7a90; font-weight: 500; }
+
+    .btn-dl {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 3px 10px 3px 7px; border-radius: 20px;
+      border: 1.5px solid #e2e8f0; background: white;
+      color: #6b7a90; font-family: inherit; font-size: .7rem; font-weight: 700;
+      cursor: pointer; text-decoration: none; transition: all .2s; flex-shrink: 0;
+    }
+    .btn-dl svg { width: 12px; height: 12px; }
+    .btn-dl:hover { border-color: #27ae60; color: #27ae60; }
   </style>
 </head>
 <body>
@@ -186,6 +196,8 @@ async function selectUser(id, name, since) {
   }
 }
 
+const DL_ICO = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>`;
+
 function render(box, id, name, since, comps, assaults) {
   const nbDone = comps.filter(c => c.terminee).length;
   const nbOngoing = comps.length - nbDone;
@@ -209,14 +221,24 @@ function render(box, id, name, since, comps, assaults) {
     </div>
 
     <div class="section-card">
-      <div class="section-title">Compétitions (${comps.length})</div>
+      <div class="section-title" style="display:flex;align-items:center;justify-content:space-between">
+        <span>Compétitions (${comps.length})</span>
+        <a class="btn-dl" href="/api/admin/users/${id}/export/competitions" download title="Exporter Excel">
+          ${DL_ICO} Excel
+        </a>
+      </div>
       <div id="compList">
         ${comps.length ? comps.map(compCard).join('') : '<div class="empty-state">Aucune compétition.</div>'}
       </div>
     </div>
 
     <div class="section-card">
-      <div class="section-title">Entraînements (${assaults.length})</div>
+      <div class="section-title" style="display:flex;align-items:center;justify-content:space-between">
+        <span>Entraînements (${assaults.length})</span>
+        <a class="btn-dl" href="/api/admin/users/${id}/export/entrainement" download title="Exporter Excel">
+          ${DL_ICO} Excel
+        </a>
+      </div>
       <div>
         ${assaults.length ? assaults.map(trainingRow).join('') : '<div class="empty-state">Aucune séance.</div>'}
       </div>

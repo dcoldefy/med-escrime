@@ -652,14 +652,8 @@ def _tour_label_py(n: int) -> str:
     return f"Tour de {n}"
 
 
-@app.get("/api/export/competitions")
-def export_competitions_xlsx(
-    db: Session = Depends(database.get_db),
-    user: database.User = Depends(get_current_user),
-):
+def _xlsx_competitions(user_id: int, db: Session) -> io.BytesIO:
     wb = Workbook()
-
-    # ── Feuille 1 : Compétitions ──────────────────────────────
     ws1 = wb.active
     ws1.title = "Compétitions"
     ws1.append([
@@ -668,7 +662,7 @@ def export_competitions_xlsx(
     ])
     comps = (
         db.query(database.Competition)
-        .filter(database.Competition.user_id == user.id)
+        .filter(database.Competition.user_id == user_id)
         .order_by(database.Competition.date)
         .all()
     )
@@ -679,7 +673,6 @@ def export_competitions_xlsx(
             c.a_poule, c.a_tableau, c.terminee, c.notes_analyse or "",
         ])
 
-    # ── Feuille 2 : Assaults de poule ────────────────────────
     ws2 = wb.create_sheet("Assaults_Poule")
     ws2.append([
         "Competition_ID", "Competition_Nom", "Competition_Date",
@@ -691,13 +684,12 @@ def export_competitions_xlsx(
         poule = db.query(database.Poule).filter(database.Poule.competition_id == c.id).first()
         if not poule:
             continue
-        assaults = (
+        for a in (
             db.query(database.AssaultPoule)
             .filter(database.AssaultPoule.poule_id == poule.id)
             .order_by(database.AssaultPoule.numero)
             .all()
-        )
-        for a in assaults:
+        ):
             ws2.append([
                 c.id, c.nom, str(c.date),
                 poule.id, a.numero, a.adversaire or "",
@@ -705,7 +697,6 @@ def export_competitions_xlsx(
                 a.commentaires or "", a.notes_post or "",
             ])
 
-    # ── Feuille 3 : Assaults de tableau ──────────────────────
     ws3 = wb.create_sheet("Assaults_Tableau")
     ws3.append([
         "Competition_ID", "Competition_Nom", "Competition_Date",
@@ -714,13 +705,12 @@ def export_competitions_xlsx(
         "Commentaires", "Notes_post",
     ])
     for c in comps:
-        assaults = (
+        for a in (
             db.query(database.AssaultTableau)
             .filter(database.AssaultTableau.competition_id == c.id)
             .order_by(database.AssaultTableau.created_at)
             .all()
-        )
-        for a in assaults:
+        ):
             ws3.append([
                 c.id, c.nom, str(c.date),
                 _tour_label_py(a.tour), a.tour, a.adversaire or "",
@@ -731,11 +721,49 @@ def export_competitions_xlsx(
     buf = io.BytesIO()
     wb.save(buf)
     buf.seek(0)
-    return StreamingResponse(
-        buf,
-        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        headers={"Content-Disposition": "attachment; filename=med_competitions.xlsx"},
-    )
+    return buf
+
+
+def _xlsx_entrainement(user_id: int, db: Session) -> io.BytesIO:
+    wb = Workbook()
+    ws1 = wb.active
+    ws1.title = "Assaults_libres"
+    ws1.append(["ID", "Date", "Heure", "Notes"])
+    for a in (
+        db.query(database.Assault)
+        .filter(database.Assault.user_id == user_id)
+        .order_by(database.Assault.date, database.Assault.heure)
+        .all()
+    ):
+        ws1.append([a.id, str(a.date), str(a.heure), a.notes or ""])
+
+    ws2 = wb.create_sheet("Leçons")
+    ws2.append(["ID", "Date", "Heure", "Maitre", "Theme", "Notes"])
+    for l in (
+        db.query(database.Lecon)
+        .filter(database.Lecon.user_id == user_id)
+        .order_by(database.Lecon.date, database.Lecon.heure)
+        .all()
+    ):
+        ws2.append([l.id, str(l.date), str(l.heure), l.maitre or "", l.theme or "", l.notes or ""])
+
+    buf = io.BytesIO()
+    wb.save(buf)
+    buf.seek(0)
+    return buf
+
+
+XLSX_MIME = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+
+
+@app.get("/api/export/competitions")
+def export_competitions_xlsx(
+    db: Session = Depends(database.get_db),
+    user: database.User = Depends(get_current_user),
+):
+    buf = _xlsx_competitions(user.id, db)
+    return StreamingResponse(buf, media_type=XLSX_MIME,
+        headers={"Content-Disposition": "attachment; filename=med_competitions.xlsx"})
 
 
 @app.get("/api/export/entrainement")
@@ -743,41 +771,37 @@ def export_entrainement_xlsx(
     db: Session = Depends(database.get_db),
     user: database.User = Depends(get_current_user),
 ):
-    wb = Workbook()
+    buf = _xlsx_entrainement(user.id, db)
+    return StreamingResponse(buf, media_type=XLSX_MIME,
+        headers={"Content-Disposition": "attachment; filename=med_entrainement.xlsx"})
 
-    # ── Feuille 1 : Assaults libres ───────────────────────────
-    ws1 = wb.active
-    ws1.title = "Assaults_libres"
-    ws1.append(["ID", "Date", "Heure", "Notes"])
-    assaults = (
-        db.query(database.Assault)
-        .filter(database.Assault.user_id == user.id)
-        .order_by(database.Assault.date, database.Assault.heure)
-        .all()
-    )
-    for a in assaults:
-        ws1.append([a.id, str(a.date), str(a.heure), a.notes or ""])
 
-    # ── Feuille 2 : Leçons ────────────────────────────────────
-    ws2 = wb.create_sheet("Leçons")
-    ws2.append(["ID", "Date", "Heure", "Maitre", "Theme", "Notes"])
-    lecons = (
-        db.query(database.Lecon)
-        .filter(database.Lecon.user_id == user.id)
-        .order_by(database.Lecon.date, database.Lecon.heure)
-        .all()
-    )
-    for l in lecons:
-        ws2.append([l.id, str(l.date), str(l.heure), l.maitre or "", l.theme or "", l.notes or ""])
+@app.get("/api/admin/users/{user_id}/export/competitions")
+def admin_export_competitions(
+    user_id: int,
+    request: Request,
+    db: Session = Depends(database.get_db),
+):
+    require_admin(request)
+    user = db.query(database.User).filter(database.User.id == user_id).first()
+    name = (user.name if user else str(user_id)).replace(" ", "_")
+    buf = _xlsx_competitions(user_id, db)
+    return StreamingResponse(buf, media_type=XLSX_MIME,
+        headers={"Content-Disposition": f"attachment; filename=med_competitions_{name}.xlsx"})
 
-    buf = io.BytesIO()
-    wb.save(buf)
-    buf.seek(0)
-    return StreamingResponse(
-        buf,
-        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        headers={"Content-Disposition": "attachment; filename=med_entrainement.xlsx"},
-    )
+
+@app.get("/api/admin/users/{user_id}/export/entrainement")
+def admin_export_entrainement(
+    user_id: int,
+    request: Request,
+    db: Session = Depends(database.get_db),
+):
+    require_admin(request)
+    user = db.query(database.User).filter(database.User.id == user_id).first()
+    name = (user.name if user else str(user_id)).replace(" ", "_")
+    buf = _xlsx_entrainement(user_id, db)
+    return StreamingResponse(buf, media_type=XLSX_MIME,
+        headers={"Content-Disposition": f"attachment; filename=med_entrainement_{name}.xlsx"})
 
 
 # ─────────────────────────────────────────────────────────────────────────────
