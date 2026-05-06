@@ -132,6 +132,7 @@ function initMicAll() {
     if (final) S.micBaseText = area.value.trimStart();
   };
 
+  S.recognition.onspeechend = () => { try { S.recognition.stop(); } catch (_) {} };
   S.recognition.onend  = () => stopMic();
   S.recognition.onerror = () => stopMic();
 
