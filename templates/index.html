@@ -244,6 +244,7 @@
         </div>
       </div>
       <div class="btn-row">
+        <button class="btn-secondary hidden" id="btnPouleBack">← Préc.</button>
         <button class="btn-secondary" id="btnPouleSkip">Passer</button>
         <button class="save-btn flex-1" id="btnPouleSave">Enregistrer →</button>
       </div>
@@ -271,8 +272,8 @@
           <polyline points="21,15 16,10 5,21"/>
         </svg>
         <p>Photo de la feuille de poule <span class="opt">(optionnel)</span></p>
-        <input type="file" id="photoPouleInput" accept="image/*" capture="environment" style="display:none" />
-        <button class="btn-photo" onclick="document.getElementById('photoPouleInput').click()">Prendre / Choisir une photo</button>
+        <input type="file" id="photoPouleInput" accept="image/*" style="display:none" />
+        <button class="btn-photo" onclick="document.getElementById('photoPouleInput').click()">Photo / Galerie</button>
         <p class="photo-status" id="photoPouleStatus"></p>
       </div>
 
@@ -473,8 +474,8 @@
           <polyline points="21,15 16,10 5,21"/>
         </svg>
         <p>Photo du tableau <span class="opt">(optionnel)</span></p>
-        <input type="file" id="photoTableauInput" accept="image/*" capture="environment" style="display:none" />
-        <button class="btn-photo" onclick="document.getElementById('photoTableauInput').click()">Prendre / Choisir une photo</button>
+        <input type="file" id="photoTableauInput" accept="image/*" style="display:none" />
+        <button class="btn-photo" onclick="document.getElementById('photoTableauInput').click()">Photo / Galerie</button>
         <p class="photo-status" id="photoTableauStatus"></p>
       </div>
 

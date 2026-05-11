@@ -353,6 +353,13 @@ select.field-input { cursor: pointer; }
 }
 .btn-correct:hover { color: var(--primary); }
 
+.btn-danger-sm {
+  padding: 10px 14px; border: 1.5px solid var(--danger); border-radius: var(--radius-sm);
+  background: transparent; color: var(--danger); font-family: var(--font);
+  font-size: .85rem; cursor: pointer; transition: background .2s, color .2s;
+}
+.btn-danger-sm:hover { background: var(--danger); color: #fff; }
+
 /* ── Photo upload ────────────────────────────────────────── */
 .photo-upload-zone {
   border: 2px dashed var(--border); border-radius: var(--radius-sm);

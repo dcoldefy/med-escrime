@@ -550,6 +550,21 @@ def patch_assault_poule(
     return _assault_poule_dict(a)
 
 
+@app.delete("/api/assaults_poule/{assault_id}")
+def delete_assault_poule(
+    assault_id: int,
+    db: Session = Depends(database.get_db),
+    user: database.User = Depends(get_current_user),
+):
+    a = _get_or_404(db, database.AssaultPoule, assault_id)
+    p = _get_or_404(db, database.Poule, a.poule_id)
+    c = _get_or_404(db, database.Competition, p.competition_id)
+    _check_owner(c.user_id, user.id)
+    db.delete(a)
+    db.commit()
+    return {"ok": True}
+
+
 @app.get("/api/poules/{poule_id}/assaults")
 def list_assaults_poule(
     poule_id: int,
@@ -622,6 +637,20 @@ def patch_assault_tableau(
     db.commit()
     db.refresh(a)
     return _assault_tableau_dict(a)
+
+
+@app.delete("/api/assaults_tableau/{assault_id}")
+def delete_assault_tableau(
+    assault_id: int,
+    db: Session = Depends(database.get_db),
+    user: database.User = Depends(get_current_user),
+):
+    a = _get_or_404(db, database.AssaultTableau, assault_id)
+    c = _get_or_404(db, database.Competition, a.competition_id)
+    _check_owner(c.user_id, user.id)
+    db.delete(a)
+    db.commit()
+    return {"ok": True}
 
 
 @app.get("/api/competitions/{comp_id}/tableau")

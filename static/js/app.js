@@ -4,15 +4,16 @@
 
 // ── État global ──────────────────────────────────────────────
 const S = {
-  tab:          'competitions',  // onglet actif
-  comp:         null,            // competition en cours {id, a_poule, a_tableau, nom}
-  poule:        null,            // {id, nb_tireurs, nb_assaults}
-  pouleIndex:   1,               // assault courant dans la poule (1-based)
-  tableauTour:  64,              // taille du tour courant
-  recognition:  null,
-  listening:    false,
-  activeMic:    null,            // id de la textarea active pour le micro
-  micBaseText:  '',
+  tab:               'competitions',  // onglet actif
+  comp:              null,            // competition en cours {id, a_poule, a_tableau, nom}
+  poule:             null,            // {id, nb_tireurs, nb_assaults}
+  pouleIndex:        1,               // assault courant dans la poule (1-based)
+  pouleAssaultData:  {},              // cache des assaults saisis : numero → objet assault
+  tableauTour:       64,              // taille du tour courant
+  recognition:       null,
+  listening:         false,
+  activeMic:         null,            // id de la textarea active pour le micro
+  micBaseText:       '',
 };
 
 // ── Icône delete ─────────────────────────────────────────────
@@ -305,6 +306,8 @@ async function startCompWorkflow(c) {
     // Poule en cours : reprendre à l'assault suivant
     let existingAssaults = [];
     try { existingAssaults = await api(`/api/poules/${poule.id}/assaults`); } catch {}
+    S.pouleAssaultData = {};
+    existingAssaults.forEach(a => { S.pouleAssaultData[a.numero] = a; });
     S.pouleIndex = existingAssaults.length + 1;
     if (S.pouleIndex > poule.nb_assaults) {
       setActive('qualifToggle', null);
@@ -346,8 +349,9 @@ function initPouleSetup() {
       const p = await api(`/api/competitions/${S.comp.id}/poule`, {
         method: 'POST', body: { nb_tireurs: n }
       });
-      S.poule      = p;
-      S.pouleIndex = 1;
+      S.poule             = p;
+      S.pouleIndex        = 1;
+      S.pouleAssaultData  = {};
       showPouleAssault();
     } catch { alert('Erreur lors de la création de la poule.'); }
   });
@@ -357,18 +361,21 @@ function initPouleSetup() {
 //  POULE — assault par assault
 // ─────────────────────────────────────────────────────────────
 function showPouleAssault() {
-  const total = S.poule.nb_assaults;
+  const total    = S.poule.nb_assaults;
+  const existing = S.pouleAssaultData[S.pouleIndex];
   document.getElementById('pouleAssaultTitle').textContent =
     `Poule — Assault ${S.pouleIndex}/${total}`;
   document.getElementById('pouleProgress').style.width =
     `${((S.pouleIndex - 1) / total) * 100}%`;
 
-  // Réinitialiser les champs
-  document.getElementById('pouleAdv').value          = '';
-  document.getElementById('pouleScoreMoi').value     = '';
-  document.getElementById('pouleScoreAdv').value     = '';
-  document.getElementById('pouleCommentaires').value = '';
+  document.getElementById('pouleAdv').value          = existing?.adversaire || '';
+  document.getElementById('pouleScoreMoi').value     = existing?.score_moi != null ? existing.score_moi : '';
+  document.getElementById('pouleScoreAdv').value     = existing?.score_adversaire != null ? existing.score_adversaire : '';
+  document.getElementById('pouleCommentaires').value = existing?.commentaires || '';
   setFeedback('feedbackPoule', '', '');
+
+  document.getElementById('btnPouleBack').classList.toggle('hidden', S.pouleIndex <= 1);
+  document.getElementById('btnPouleSkip').textContent = existing ? 'Garder' : 'Passer';
 
   showScreen('comp', 'poule-assault');
 }
@@ -376,9 +383,21 @@ function showPouleAssault() {
 function initPouleAssault() {
   document.getElementById('btnPouleSave').addEventListener('click', () => savePouleAssault(false));
   document.getElementById('btnPouleSkip').addEventListener('click', () => savePouleAssault(true));
+  document.getElementById('btnPouleBack').addEventListener('click', () => {
+    S.pouleIndex--;
+    showPouleAssault();
+  });
 }
 
 async function savePouleAssault(skip) {
+  const existing = S.pouleAssaultData[S.pouleIndex];
+
+  // "Garder/Passer" sur un assault déjà enregistré → avancer sans sauvegarder
+  if (skip && existing) {
+    advancePoule();
+    return;
+  }
+
   const adv  = document.getElementById('pouleAdv').value.trim();
   const sm   = parseInt(document.getElementById('pouleScoreMoi').value);
   const sa   = parseInt(document.getElementById('pouleScoreAdv').value);
@@ -387,26 +406,35 @@ async function savePouleAssault(skip) {
 
   const payload = {
     numero:           S.pouleIndex,
-    adversaire:       adv,
-    score_moi:        isNaN(sm) ? null : sm,
-    score_adversaire: isNaN(sa) ? null : sa,
-    victoire:         vic,
+    adversaire:       skip ? '' : adv,
+    score_moi:        skip ? null : (isNaN(sm) ? null : sm),
+    score_adversaire: skip ? null : (isNaN(sa) ? null : sa),
+    victoire:         skip ? null : vic,
     commentaires:     skip ? '' : comm,
   };
 
   try {
-    await api(`/api/poules/${S.poule.id}/assaults`, { method: 'POST', body: payload });
-    if (S.pouleIndex < S.poule.nb_assaults) {
-      S.pouleIndex++;
-      showPouleAssault();
+    let saved;
+    if (existing) {
+      saved = await api(`/api/assaults_poule/${existing.id}`, { method: 'PATCH', body: payload });
     } else {
-      // Fin de poule
-      document.getElementById('pouleProgress').style.width = '100%';
-      setActive('qualifToggle', null);  // pas de sélection par défaut
-      showScreen('comp', 'poule-end');
+      saved = await api(`/api/poules/${S.poule.id}/assaults`, { method: 'POST', body: payload });
     }
+    S.pouleAssaultData[S.pouleIndex] = saved;
+    advancePoule();
   } catch (e) {
     setFeedback('feedbackPoule', 'Erreur : ' + e.message, 'error');
+  }
+}
+
+function advancePoule() {
+  if (S.pouleIndex < S.poule.nb_assaults) {
+    S.pouleIndex++;
+    showPouleAssault();
+  } else {
+    document.getElementById('pouleProgress').style.width = '100%';
+    setActive('qualifToggle', null);
+    showScreen('comp', 'poule-end');
   }
 }
 
@@ -1094,7 +1122,10 @@ function renderPouleRow(a) {
           <button class="mic-btn" onclick="startMic('pPost${a.id}', this)" title="Dicter">${MIC_SVG}</button>
         </div>
       </div>
-      <button class="save-btn" onclick="savePouleRow(${a.id})" style="margin-bottom:4px">Enregistrer</button>
+      <div class="btn-row" style="margin-top:4px">
+        <button class="btn-danger-sm" onclick="deletePouleRow(${a.id})">Supprimer</button>
+        <button class="save-btn flex-1" onclick="savePouleRow(${a.id})">Enregistrer</button>
+      </div>
     </div>
   </div>`;
 }
@@ -1149,7 +1180,10 @@ function renderTableauRow(a) {
           <button class="mic-btn" onclick="startMic('tPost${a.id}', this)" title="Dicter">${MIC_SVG}</button>
         </div>
       </div>
-      <button class="save-btn" onclick="saveTableauRow(${a.id})" style="margin-bottom:4px">Enregistrer</button>
+      <div class="btn-row" style="margin-top:4px">
+        <button class="btn-danger-sm" onclick="deleteTableauRow(${a.id})">Supprimer</button>
+        <button class="save-btn flex-1" onclick="saveTableauRow(${a.id})">Enregistrer</button>
+      </div>
     </div>
   </div>`;
 }
@@ -1215,6 +1249,22 @@ async function saveTableauRow(id) {
     else if (cp) cp.remove();
     toggleRow(`tEdit${id}`);
   } catch { alert('Erreur lors de la sauvegarde.'); }
+}
+
+async function deletePouleRow(id) {
+  if (!confirm('Supprimer cet assault de poule ?')) return;
+  try {
+    await api(`/api/assaults_poule/${id}`, { method: 'DELETE' });
+    document.getElementById(`pRow${id}`)?.remove();
+  } catch { alert('Erreur lors de la suppression.'); }
+}
+
+async function deleteTableauRow(id) {
+  if (!confirm('Supprimer cet assault de tableau ?')) return;
+  try {
+    await api(`/api/assaults_tableau/${id}`, { method: 'DELETE' });
+    document.getElementById(`tRow${id}`)?.remove();
+  } catch { alert('Erreur lors de la suppression.'); }
 }
 
 // ─────────────────────────────────────────────────────────────
