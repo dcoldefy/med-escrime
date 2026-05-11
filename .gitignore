@@ -27,3 +27,6 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Export personnel (contient le token MED)
+export_david_coldefy.py

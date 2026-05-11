@@ -882,6 +882,24 @@ function initExport() {
     const d = new Date().toLocaleDateString('fr-CA');
     downloadExport('/api/export/entrainement', `med_entrainement_${d}.xlsx`);
   });
+  document.getElementById('btnExportDashboard').addEventListener('click', async () => {
+    const btn = document.getElementById('btnExportDashboard');
+    btn.disabled = true;
+    try {
+      const token = localStorage.getItem('med_token');
+      const res = await fetch('/api/export/dashboard', { headers: { 'X-User-Token': token } });
+      if (!res.ok) throw new Error(await res.text());
+      const html = await res.text();
+      const blob = new Blob([html], { type: 'text/html' });
+      const url = URL.createObjectURL(blob);
+      window.open(url, '_blank');
+      setTimeout(() => URL.revokeObjectURL(url), 10000);
+    } catch (e) {
+      alert('Erreur tableau de bord : ' + e.message);
+    } finally {
+      btn.disabled = false;
+    }
+  });
 }
 
 async function downloadExport(endpoint, filename) {
