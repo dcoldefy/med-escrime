@@ -10,6 +10,7 @@ const S = {
   pouleIndex:        1,               // assault courant dans la poule (1-based)
   pouleAssaultData:  {},              // cache des assaults saisis : numero → objet assault
   tableauTour:       64,              // taille du tour courant
+  fromHisto:         false,           // true quand on ouvre un détail depuis l'onglet Historique
   recognition:       null,
   listening:         false,
   activeMic:         null,            // id de la textarea active pour le micro
@@ -672,10 +673,13 @@ async function saveAssault() {
   }
 }
 
-function renderAssaultCard(a) {
-  const date  = new Date(a.date + 'T00:00:00').toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
-  const heure = a.heure.slice(0, 5);
-  return `<div class="assault-card" id="assault-${a.id}" onclick="openEntrDetail(${a.id})" style="cursor:pointer">
+function renderAssaultCard(a, fromHisto = false) {
+  const date    = new Date(a.date + 'T00:00:00').toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+  const heure   = a.heure.slice(0, 5);
+  const cardId  = fromHisto ? `h-assault-${a.id}` : `assault-${a.id}`;
+  const clickFn = fromHisto ? `openFromHisto('assault',${a.id})` : `openEntrDetail(${a.id})`;
+  const delFn   = fromHisto ? `deleteFromHisto('assault',${a.id})` : `deleteAssault(${a.id})`;
+  return `<div class="assault-card" id="${cardId}" onclick="${clickFn}" style="cursor:pointer">
     <div class="assault-meta">
       <span class="assault-time">${heure}</span>
       <span class="assault-badge badge-entrainement">Entraîn.</span>
@@ -684,7 +688,7 @@ function renderAssaultCard(a) {
       <div class="assault-date">${date}</div>
       <div class="assault-notes${a.notes ? '' : ' empty'}">${a.notes ? esc(a.notes) : 'Aucune note.'}</div>
     </div>
-    <button class="del-btn" onclick="event.stopPropagation(); deleteAssault(${a.id})" title="Supprimer">${ICO_DEL}</button>
+    <button class="del-btn" onclick="event.stopPropagation(); ${delFn}" title="Supprimer">${ICO_DEL}</button>
   </div>`;
 }
 
@@ -736,12 +740,15 @@ async function saveLecon() {
   }
 }
 
-function renderLeconCard(l) {
+function renderLeconCard(l, fromHisto = false) {
   const date     = new Date(l.date + 'T00:00:00').toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
   const heure    = l.heure.slice(0, 5);
   const subtitle = [l.maitre, l.theme].filter(Boolean).join(' · ');
   const body     = subtitle || l.notes.slice(0, 80);
-  return `<div class="assault-card lecon-card" id="lecon-${l.id}" onclick="openLeconDetail(${l.id})" style="cursor:pointer; border-left-color:#2d6a4f">
+  const cardId   = fromHisto ? `h-lecon-${l.id}` : `lecon-${l.id}`;
+  const clickFn  = fromHisto ? `openFromHisto('lecon',${l.id})` : `openLeconDetail(${l.id})`;
+  const delFn    = fromHisto ? `deleteFromHisto('lecon',${l.id})` : `deleteLecon(${l.id})`;
+  return `<div class="assault-card lecon-card" id="${cardId}" onclick="${clickFn}" style="cursor:pointer; border-left-color:#2d6a4f">
     <div class="assault-meta">
       <span class="assault-time">${heure}</span>
       <span class="assault-badge badge-lecon">Leçon</span>
@@ -750,7 +757,7 @@ function renderLeconCard(l) {
       <div class="assault-date">${date}</div>
       <div class="assault-notes${body ? '' : ' empty'}">${body ? esc(body) : 'Aucune note.'}</div>
     </div>
-    <button class="del-btn" onclick="event.stopPropagation(); deleteLecon(${l.id})" title="Supprimer">${ICO_DEL}</button>
+    <button class="del-btn" onclick="event.stopPropagation(); ${delFn}" title="Supprimer">${ICO_DEL}</button>
   </div>`;
 }
 
@@ -794,8 +801,9 @@ async function saveLeconDetail() {
       method: 'PATCH', body: { date, heure: heure + ':00', maitre, theme, notes }
     });
     setFeedback('feedbackLeconDetail', 'Enregistré !', 'ok');
-    setTimeout(() => setFeedback('feedbackLeconDetail', '', ''), 3000);
+    setTimeout(() => { setFeedback('feedbackLeconDetail', '', ''); goBackFromEntrDetail(); }, 1500);
     loadEntrainement();
+    if (S.fromHisto) loadHistorique();
   } catch { setFeedback('feedbackLeconDetail', 'Erreur.', 'error'); }
 }
 
@@ -825,8 +833,8 @@ async function loadHistorique() {
     if (!items.length) { list.innerHTML = '<p class="empty-msg">Aucun élément.</p>'; return; }
     list.innerHTML = items.map(it => {
       if (it._type === 'comp')   return renderHistoComp(it);
-      if (it._type === 'lecon')  return renderLeconCard(it);
-      return renderAssaultCard(it);
+      if (it._type === 'lecon')  return renderLeconCard(it, true);
+      return renderAssaultCard(it, true);
     }).join('');
   } catch { list.innerHTML = '<p class="empty-msg" style="color:var(--danger)">Erreur.</p>'; }
 }
@@ -955,13 +963,42 @@ function switchTab(name) {
 }
 
 function openFromHisto(type, id) {
+  S.fromHisto = true;
   if (type === 'comp') {
+    S.fromHisto = false; // comp detail a son propre bouton retour vers la liste comp
     switchTab('competitions');
     openCompDetail(id);
+  } else if (type === 'lecon') {
+    switchTab('entrainement');
+    openLeconDetail(id);
   } else {
     switchTab('entrainement');
     openEntrDetail(id);
   }
+}
+
+function goBackFromEntrDetail() {
+  if (S.fromHisto) {
+    S.fromHisto = false;
+    switchTab('historique');
+    loadHistorique();
+  } else {
+    showScreen('entr', 'list');
+  }
+}
+
+async function deleteFromHisto(type, id) {
+  const label = type === 'assault' ? 'cet assault' : 'cette leçon';
+  if (!confirm(`Supprimer ${label} ?`)) return;
+  const url = type === 'assault' ? `/api/assaults/${id}` : `/api/lecons/${id}`;
+  try {
+    await api(url, { method: 'DELETE' });
+    document.getElementById(`h-${type}-${id}`)?.remove();
+    loadEntrainement();
+    const list = document.getElementById('historyList');
+    if (!list.querySelector('.assault-card'))
+      list.innerHTML = '<p class="empty-msg">Aucun élément.</p>';
+  } catch { alert('Erreur lors de la suppression.'); }
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -1297,7 +1334,8 @@ async function saveEntrDetail() {
       method: 'PATCH', body: { date, heure: heure + ':00', notes }
     });
     setFeedback('feedbackEntrDetail', 'Enregistré !', 'ok');
-    setTimeout(() => setFeedback('feedbackEntrDetail', '', ''), 3000);
+    setTimeout(() => { setFeedback('feedbackEntrDetail', '', ''); goBackFromEntrDetail(); }, 1500);
     loadEntrainement();
+    if (S.fromHisto) loadHistorique();
   } catch { setFeedback('feedbackEntrDetail', 'Erreur.', 'error'); }
 }
