@@ -57,7 +57,7 @@ cd ~/med-escrime && git pull
 sudo systemctl restart med-escrime
 
 # 3. Accès via Tailscale Funnel (HTTPS sur port 443)
-https://survalerte.tail57ebcb.ts.net
+https://med.tail57ebcb.ts.net
 ```
 
 ## Service systemd (Raspberry Pi)
