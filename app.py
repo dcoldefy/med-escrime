@@ -940,7 +940,6 @@ _DASHBOARD_TEMPLATE = """\
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>David Coldefy · Escrime</title>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f0f2f5;color:#1a1a2e}
@@ -1082,19 +1081,24 @@ document.querySelectorAll('.tab').forEach(function(tab){tab.addEventListener('cl
 })();
 (function(){
   if(!DATA.palmares.length){document.getElementById('ffe-warning').innerHTML='<div class="no-ffe">Palmarès FFE non disponible lors de cet export (escrime-info.com inaccessible).</div>';return;}
-  if(typeof Chart==='undefined'){document.getElementById('ffe-warning').innerHTML='<div class="no-ffe">Graphiques indisponibles (Chart.js non chargé — vérifier la connexion internet).</div>';return;}
-  try{
-    var comps=DATA.palmares.filter(function(c){return c.classement&&c.date});
-    function toDs(cat){return comps.filter(function(c){return c.categorie===cat}).map(function(c){var yr=parseInt(c.date.slice(0,4)),mo=parseInt(c.date.slice(5,7));return{x:yr+(mo-1)/12,y:c.classement,label:c.libelle,lieu:c.lieu||'',date:fd(c.date)}});}
-    new Chart(document.getElementById('chart-evo'),{type:'scatter',data:{datasets:[
-      {label:'Senior',data:toDs('S'),backgroundColor:'rgba(59,130,246,.65)',pointRadius:5,pointHoverRadius:7},
-      {label:'Vétéran',data:toDs('V'),backgroundColor:'rgba(249,115,22,.65)',pointRadius:5,pointHoverRadius:7},
-    ]},options:{responsive:true,plugins:{legend:{position:'top'},tooltip:{callbacks:{label:function(ctx){var d=ctx.raw;return[d.label,d.lieu+' · '+d.date,'Classement : '+d.y]}}}},
-    scales:{x:{title:{display:true,text:'Année'},min:2007,max:2027,ticks:{stepSize:1,callback:function(v){return Number.isInteger(v)?v:''}}},y:{reverse:true,title:{display:true,text:'Classement'},min:1,ticks:{stepSize:10}}}}});
-    var years={};DATA.palmares.forEach(function(c){var y=c.date.slice(0,4);years[y]=(years[y]||0)+1});
-    var yl=Object.keys(years).sort();
-    new Chart(document.getElementById('chart-year'),{type:'bar',data:{labels:yl,datasets:[{label:'Compétitions',data:yl.map(function(y){return years[y]}),backgroundColor:'#1e3a5f',borderRadius:3}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{stepSize:1}},x:{ticks:{maxRotation:90}}}}});
-  }catch(e){console.error('Chart error:',e);}
+  var s=document.createElement('script');
+  s.src='https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js';
+  s.onerror=function(){document.getElementById('ffe-warning').innerHTML='<div class="no-ffe">Graphiques indisponibles (Chart.js non chargé — vérifier la connexion internet).</div>';};
+  s.onload=function(){
+    try{
+      var comps=DATA.palmares.filter(function(c){return c.classement&&c.date});
+      function toDs(cat){return comps.filter(function(c){return c.categorie===cat}).map(function(c){var yr=parseInt(c.date.slice(0,4)),mo=parseInt(c.date.slice(5,7));return{x:yr+(mo-1)/12,y:c.classement,label:c.libelle,lieu:c.lieu||'',date:fd(c.date)}});}
+      new Chart(document.getElementById('chart-evo'),{type:'scatter',data:{datasets:[
+        {label:'Senior',data:toDs('S'),backgroundColor:'rgba(59,130,246,.65)',pointRadius:5,pointHoverRadius:7},
+        {label:'Vétéran',data:toDs('V'),backgroundColor:'rgba(249,115,22,.65)',pointRadius:5,pointHoverRadius:7},
+      ]},options:{responsive:true,plugins:{legend:{position:'top'},tooltip:{callbacks:{label:function(ctx){var d=ctx.raw;return[d.label,d.lieu+' · '+d.date,'Classement : '+d.y]}}}},
+      scales:{x:{title:{display:true,text:'Année'},min:2007,max:2027,ticks:{stepSize:1,callback:function(v){return Number.isInteger(v)?v:''}}},y:{reverse:true,title:{display:true,text:'Classement'},min:1,ticks:{stepSize:10}}}}});
+      var years={};DATA.palmares.forEach(function(c){var y=c.date.slice(0,4);years[y]=(years[y]||0)+1});
+      var yl=Object.keys(years).sort();
+      new Chart(document.getElementById('chart-year'),{type:'bar',data:{labels:yl,datasets:[{label:'Compétitions',data:yl.map(function(y){return years[y]}),backgroundColor:'#1e3a5f',borderRadius:3}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{stepSize:1}},x:{ticks:{maxRotation:90}}}}});
+    }catch(e){console.error('Chart error:',e);}
+  };
+  document.head.appendChild(s);
 })();
 var sortK='date',sortD=-1,filtered=DATA.palmares.slice();
 function sortArr(arr,k,d){return arr.slice().sort(function(a,b){var va=a[k]!=null?a[k]:'',vb=b[k]!=null?b[k]:'';if(k==='classement'){va=va||9999;vb=vb||9999;}return va<vb?-d:va>vb?d:0});}
