@@ -1127,13 +1127,24 @@ async function refreshDetailPhotos(compId) {
     const typeLabel = { poule: 'Poule', tableau: 'Tableau', generale: 'Générale' };
     document.getElementById('dPhotos').innerHTML = photos.length
       ? photos.map(p =>
-          `<a href="${p.url}" target="_blank" class="photo-thumb">
-            <img src="${p.url}" alt="${p.type_photo}" loading="lazy"/>
-            <span>${typeLabel[p.type_photo] || p.type_photo}</span>
-          </a>`
+          `<div class="photo-thumb-wrap">
+            <a href="${p.url}" target="_blank" class="photo-thumb">
+              <img src="${p.url}" alt="${p.type_photo}" loading="lazy"/>
+              <span>${typeLabel[p.type_photo] || p.type_photo}</span>
+            </a>
+            <button class="photo-del-btn" onclick="deletePhoto(${p.id}, ${compId})" title="Supprimer">${ICO_DEL}</button>
+          </div>`
         ).join('')
       : '<p class="empty-msg" style="font-size:.85rem">Aucune photo.</p>';
   } catch {}
+}
+
+async function deletePhoto(photoId, compId) {
+  if (!confirm('Supprimer cette photo ?')) return;
+  try {
+    await api(`/api/photos/${photoId}`, { method: 'DELETE' });
+    await refreshDetailPhotos(compId);
+  } catch { alert('Erreur lors de la suppression.'); }
 }
 
 async function saveCompInfo() {

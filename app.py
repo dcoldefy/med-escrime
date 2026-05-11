@@ -902,6 +902,23 @@ def list_photos(
     ]
 
 
+@app.delete("/api/photos/{photo_id}")
+def delete_photo(
+    photo_id: int,
+    db: Session = Depends(database.get_db),
+    user: database.User = Depends(get_current_user),
+):
+    p = _get_or_404(db, database.Photo, photo_id)
+    c = _get_or_404(db, database.Competition, p.competition_id)
+    _check_owner(c.user_id, user.id)
+    path = os.path.join(UPLOAD_DIR, p.filename)
+    if os.path.exists(path):
+        os.remove(path)
+    db.delete(p)
+    db.commit()
+    return {"ok": True}
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 #  Helpers
 # ─────────────────────────────────────────────────────────────────────────────
