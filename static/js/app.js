@@ -844,7 +844,7 @@ function renderHistoComp(c) {
   const day = d.toLocaleDateString('fr-FR', { day: 'numeric' });
   const mon = d.toLocaleDateString('fr-FR', { month: 'short', year: 'numeric' });
   const arme = { epee: 'Épée', fleuret: 'Fleuret', sabre: 'Sabre' }[c.arme] || c.arme;
-  return `<div class="assault-card" style="border-left-color:var(--accent); cursor:pointer"
+  return `<div class="assault-card" id="h-comp-${c.id}" style="border-left-color:var(--accent); cursor:pointer"
       onclick="openFromHisto('comp', ${c.id})">
     <div class="assault-meta">
       <span class="assault-time">${day}</span>
@@ -854,7 +854,20 @@ function renderHistoComp(c) {
       <div class="assault-date">${mon} · ${arme}</div>
       <div class="assault-notes">${esc(c.nom)}${c.ville ? ` — ${esc(c.ville)}` : ''}</div>
     </div>
+    <button class="del-btn" onclick="event.stopPropagation(); deleteHistoComp(${c.id})" title="Supprimer">${ICO_DEL}</button>
   </div>`;
+}
+
+async function deleteHistoComp(id) {
+  if (!confirm('Supprimer cette compétition et toutes ses données (assaults, photos) ?')) return;
+  try {
+    await api(`/api/competitions/${id}`, { method: 'DELETE' });
+    document.getElementById(`h-comp-${id}`)?.remove();
+    loadComps();
+    const list = document.getElementById('historyList');
+    if (!list.querySelector('.assault-card'))
+      list.innerHTML = '<p class="empty-msg">Aucun élément.</p>';
+  } catch { alert('Erreur lors de la suppression.'); }
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -1056,23 +1069,71 @@ async function openCompDetail(id) {
     }
 
     // Photos
-    try {
-      const photos = await api(`/api/competitions/${id}/photos`);
-      if (photos.length) {
-        document.getElementById('dPhotosSection').classList.remove('hidden');
-        document.getElementById('dPhotos').innerHTML = photos.map(p =>
-          `<a href="${p.url}" target="_blank" class="photo-thumb">
-            <img src="${p.url}" alt="${p.type_photo}" loading="lazy"/>
-            <span>${p.type_photo}</span>
-          </a>`
-        ).join('');
-      } else {
-        document.getElementById('dPhotosSection').classList.add('hidden');
-      }
-    } catch { document.getElementById('dPhotosSection').classList.add('hidden'); }
+    document.getElementById('dPhotosSection').classList.remove('hidden');
+    await refreshDetailPhotos(id);
+
+    // Handlers upload photo poule
+    const inputPoule = document.getElementById('dPhotoPouleInput');
+    inputPoule.value = '';
+    inputPoule.onchange = async (e) => {
+      const file = e.target.files[0]; if (!file) return;
+      const st = document.getElementById('dPhotoPouleStatus');
+      st.textContent = 'Envoi…'; st.className = 'photo-status';
+      try {
+        await uploadPhoto(id, 'poule', file);
+        st.textContent = '✓ Photo enregistrée'; st.className = 'photo-status ok';
+        await refreshDetailPhotos(id);
+      } catch { st.textContent = 'Erreur.'; st.className = 'photo-status error'; }
+      inputPoule.value = '';
+    };
+
+    // Handlers upload photo tableau
+    const inputTableau = document.getElementById('dPhotoTableauInput');
+    inputTableau.value = '';
+    inputTableau.onchange = async (e) => {
+      const file = e.target.files[0]; if (!file) return;
+      const st = document.getElementById('dPhotoTableauStatus');
+      st.textContent = 'Envoi…'; st.className = 'photo-status';
+      try {
+        await uploadPhoto(id, 'tableau', file);
+        st.textContent = '✓ Photo enregistrée'; st.className = 'photo-status ok';
+        await refreshDetailPhotos(id);
+      } catch { st.textContent = 'Erreur.'; st.className = 'photo-status error'; }
+      inputTableau.value = '';
+    };
+
+    // Handler upload photo générale
+    const inputGen = document.getElementById('dPhotoGeneraleInput');
+    inputGen.value = '';
+    inputGen.onchange = async (e) => {
+      const file = e.target.files[0]; if (!file) return;
+      const st = document.getElementById('dPhotoGeneraleStatus');
+      st.textContent = 'Envoi…'; st.className = 'photo-status';
+      try {
+        await uploadPhoto(id, 'generale', file);
+        st.textContent = '✓ Photo enregistrée'; st.className = 'photo-status ok';
+        await refreshDetailPhotos(id);
+      } catch { st.textContent = 'Erreur.'; st.className = 'photo-status error'; }
+      inputGen.value = '';
+    };
 
     showScreen('comp', 'detail');
   } catch { alert('Impossible de charger la compétition.'); }
+}
+
+async function refreshDetailPhotos(compId) {
+  try {
+    const photos = await api(`/api/competitions/${compId}/photos`);
+    const typeLabel = { poule: 'Poule', tableau: 'Tableau', generale: 'Générale' };
+    document.getElementById('dPhotos').innerHTML = photos.length
+      ? photos.map(p =>
+          `<a href="${p.url}" target="_blank" class="photo-thumb">
+            <img src="${p.url}" alt="${p.type_photo}" loading="lazy"/>
+            <span>${typeLabel[p.type_photo] || p.type_photo}</span>
+          </a>`
+        ).join('')
+      : '<p class="empty-msg" style="font-size:.85rem">Aucune photo.</p>';
+  } catch {}
 }
 
 async function saveCompInfo() {

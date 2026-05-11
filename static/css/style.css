@@ -381,6 +381,19 @@ select.field-input { cursor: pointer; }
 .photo-status.ok    { color: var(--success); }
 .photo-status.error { color: var(--danger); }
 
+.detail-photo-row {
+  display: flex; align-items: center; gap: 10px; margin-top: 12px;
+  padding-top: 12px; border-top: 1px solid var(--border);
+}
+.btn-photo-sm {
+  display: flex; align-items: center; gap: 6px;
+  padding: 7px 13px; border: 1.5px solid var(--primary); border-radius: 20px;
+  background: transparent; color: var(--primary); font-family: var(--font);
+  font-size: .8rem; font-weight: 600; cursor: pointer;
+  transition: background .2s, color .2s;
+}
+.btn-photo-sm:hover { background: var(--primary); color: #fff; }
+
 /* ── Detail section title ────────────────────────────────── */
 .detail-section-title {
   font-size: .72rem; font-weight: 800; text-transform: uppercase;

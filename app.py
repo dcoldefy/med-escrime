@@ -435,6 +435,33 @@ def patch_competition(
     return _competition_dict(c)
 
 
+@app.delete("/api/competitions/{comp_id}")
+def delete_competition(
+    comp_id: int,
+    db: Session = Depends(database.get_db),
+    user: database.User = Depends(get_current_user),
+):
+    c = _get_or_404(db, database.Competition, comp_id)
+    _check_owner(c.user_id, user.id)
+    # Photos : supprimer fichiers disque + BDD
+    photos = db.query(database.Photo).filter(database.Photo.competition_id == comp_id).all()
+    for p in photos:
+        path = os.path.join(UPLOAD_DIR, p.filename)
+        if os.path.exists(path):
+            os.remove(path)
+        db.delete(p)
+    # Poule + assaults_poule
+    poule = db.query(database.Poule).filter(database.Poule.competition_id == comp_id).first()
+    if poule:
+        db.query(database.AssaultPoule).filter(database.AssaultPoule.poule_id == poule.id).delete()
+        db.delete(poule)
+    # Assaults tableau
+    db.query(database.AssaultTableau).filter(database.AssaultTableau.competition_id == comp_id).delete()
+    db.delete(c)
+    db.commit()
+    return {"ok": True}
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 #  Poules
 # ─────────────────────────────────────────────────────────────────────────────
