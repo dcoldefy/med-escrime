@@ -904,6 +904,96 @@ def list_photos(
     ]
 
 
+@app.post("/api/competitions/{comp_id}/analyze-photo")
+async def analyze_photo_claude(
+    comp_id: int,
+    type_photo: str = Form(...),
+    db: Session = Depends(database.get_db),
+    user: database.User = Depends(get_current_user),
+):
+    try:
+        import anthropic as _anthropic
+        import base64, re as _re
+    except ImportError:
+        raise HTTPException(status_code=501, detail="Module anthropic non installé (pip install anthropic)")
+
+    api_key = os.environ.get("ANTHROPIC_API_KEY", "")
+    if not api_key:
+        raise HTTPException(status_code=503, detail="Clé API Anthropic non configurée (variable ANTHROPIC_API_KEY manquante)")
+
+    c = _get_or_404(db, database.Competition, comp_id)
+    _check_owner(c.user_id, user.id)
+
+    if type_photo not in ("poule", "tableau"):
+        raise HTTPException(status_code=400, detail="type_photo doit être 'poule' ou 'tableau'")
+
+    photos = db.query(database.Photo).filter(
+        database.Photo.competition_id == comp_id,
+        database.Photo.type_photo == type_photo,
+    ).all()
+    if not photos:
+        raise HTTPException(status_code=404, detail=f"Aucune photo de type '{type_photo}' pour cette compétition")
+
+    _mt = {"jpg": "image/jpeg", "jpeg": "image/jpeg", "png": "image/png", "gif": "image/gif", "webp": "image/webp"}
+    image_blocks = []
+    for photo in photos[:3]:
+        path = os.path.join(UPLOAD_DIR, photo.filename)
+        if not os.path.exists(path):
+            continue
+        with open(path, "rb") as f:
+            data = base64.standard_b64encode(f.read()).decode()
+        ext = os.path.splitext(photo.filename)[1].lower().lstrip(".")
+        mt = _mt.get(ext, "image/jpeg")
+        image_blocks.append({"type": "image", "source": {"type": "base64", "media_type": mt, "data": data}})
+
+    if not image_blocks:
+        raise HTTPException(status_code=404, detail="Fichiers photos introuvables sur le serveur")
+
+    if type_photo == "poule":
+        prompt = (
+            "Tu es un expert en escrime. Cette image montre une feuille de résultats de poule d'une compétition d'escrime française.\n\n"
+            "Extrais toutes les informations visibles. Retourne UNIQUEMENT un objet JSON valide, sans texte autour :\n"
+            "{\n"
+            '  "tireurs": [{"num": 1, "nom": "NOM Prenom"}, ...],\n'
+            '  "combats": [{"num1": 1, "num2": 2, "score1": 5, "score2": 3}, ...],\n'
+            '  "classement": [{"rang": 1, "num": 2, "nom": "NOM", "V": 4, "D": 0, "TS": 20, "TR": 11, "index": 9}, ...],\n'
+            '  "notes": "remarques si image peu lisible ou informations manquantes"\n'
+            "}\n\n"
+            "Règles : num1 < num2 dans combats (numérotation grille). Si une valeur n'est pas lisible utilise null."
+        )
+    else:
+        prompt = (
+            "Tu es un expert en escrime. Cette image montre un tableau direct (bracket) d'une compétition d'escrime.\n\n"
+            "Extrais tous les combats visibles. Retourne UNIQUEMENT un objet JSON valide, sans texte autour :\n"
+            "{\n"
+            '  "taille": 64,\n'
+            '  "combats": [\n'
+            '    {"tour": 64, "tireur1": "NOM1 Prenom1", "tireur2": "NOM2 Prenom2", "score1": 15, "score2": 9, "vainqueur": "NOM1 Prenom1"},\n'
+            "    ...\n"
+            "  ],\n"
+            '  "notes": "remarques si image peu lisible ou informations manquantes"\n'
+            "}\n\n"
+            "Le champ 'tour' = nombre de participants à ce stade (64 pour tour de 64, 32 pour T32, 2 pour finale). "
+            "Si une info n'est pas lisible utilise null."
+        )
+
+    client = _anthropic.Anthropic(api_key=api_key)
+    msg = client.messages.create(
+        model="claude-sonnet-4-6",
+        max_tokens=4096,
+        messages=[{"role": "user", "content": image_blocks + [{"type": "text", "text": prompt}]}],
+    )
+    text = msg.content[0].text.strip()
+
+    m = _re.search(r"\{[\s\S]*\}", text)
+    if m:
+        try:
+            return json.loads(m.group())
+        except json.JSONDecodeError:
+            pass
+    return {"raw": text, "notes": "Format JSON non reconnu — voir champ 'raw'"}
+
+
 @app.delete("/api/photos/{photo_id}")
 def delete_photo(
     photo_id: int,

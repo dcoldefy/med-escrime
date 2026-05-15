@@ -1058,11 +1058,15 @@ async function openCompDetail(id) {
     document.getElementById('dCompNotes').value = comp.notes_analyse || '';
     setFeedback('feedbackDetail', '', '');
 
+    S.detailPouleAssaults   = [];
+    S.detailTableauAssaults = [];
+
     // Poule
     if (comp.a_poule) {
       try {
         const poule  = await api(`/api/competitions/${id}/poule`);
         const assaults = await api(`/api/poules/${poule.id}/assaults`);
+        S.detailPouleAssaults = assaults;
         document.getElementById('dPouleSection').classList.remove('hidden');
         document.getElementById('dPouleAssaults').innerHTML =
           assaults.length ? assaults.map(renderPouleRow).join('') : '<p class="empty-msg">Aucun assault.</p>';
@@ -1075,6 +1079,7 @@ async function openCompDetail(id) {
     if (comp.a_tableau) {
       try {
         const assaults = await api(`/api/competitions/${id}/tableau`);
+        S.detailTableauAssaults = assaults;
         if (assaults.length) {
           document.getElementById('dTableauSection').classList.remove('hidden');
           document.getElementById('dTableauAssaults').innerHTML = assaults.map(renderTableauRow).join('');
@@ -1154,7 +1159,26 @@ async function refreshDetailPhotos(compId) {
           </div>`
         ).join('')
       : '<p class="empty-msg" style="font-size:.85rem">Aucune photo.</p>';
+    _updateSectionPhotoBadge('Poule',   photos.filter(p => p.type_photo === 'poule'));
+    _updateSectionPhotoBadge('Tableau', photos.filter(p => p.type_photo === 'tableau'));
   } catch {}
+}
+
+function _updateSectionPhotoBadge(cap, photos) {
+  const badge = document.getElementById(`d${cap}PhotoBadge`);
+  const btn   = document.getElementById(`btnAnalyze${cap}`);
+  if (!badge) return;
+  if (!photos.length) {
+    badge.classList.add('hidden');
+    if (btn) btn.classList.add('hidden');
+    return;
+  }
+  badge.classList.remove('hidden');
+  const thumb = document.getElementById(`d${cap}PhotoThumb`);
+  if (thumb) thumb.src = photos[0].url;
+  const cnt = document.getElementById(`d${cap}PhotoCount`);
+  if (cnt) cnt.textContent = photos.length === 1 ? '1 photo' : `${photos.length} photos`;
+  if (btn) btn.classList.remove('hidden');
 }
 
 async function deletePhoto(photoId, compId) {
@@ -1163,6 +1187,276 @@ async function deletePhoto(photoId, compId) {
     await api(`/api/photos/${photoId}`, { method: 'DELETE' });
     await refreshDetailPhotos(compId);
   } catch { alert('Erreur lors de la suppression.'); }
+}
+
+// ─────────────────────────────────────────────────────────────
+//  ANALYSE PHOTO AVEC CLAUDE
+// ─────────────────────────────────────────────────────────────
+
+const _ANALYZE_STAR = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg>`;
+
+async function analyzeWithClaude(compId, type) {
+  const cap   = type === 'poule' ? 'Poule' : 'Tableau';
+  const btn   = document.getElementById(`btnAnalyze${cap}`);
+  const panel = document.getElementById(`d${cap}AnalyzePanel`);
+  const assaults = type === 'poule' ? S.detailPouleAssaults : S.detailTableauAssaults;
+
+  btn.disabled = true;
+  btn.innerHTML = `<span style="opacity:.6">Analyse en cours…</span>`;
+  panel.classList.add('hidden');
+
+  try {
+    const token = localStorage.getItem('med_token');
+    const fd = new FormData();
+    fd.append('type_photo', type);
+    const res = await fetch(`/api/competitions/${compId}/analyze-photo`, {
+      method: 'POST',
+      headers: token ? { 'X-User-Token': token } : {},
+      body: fd,
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || `Erreur ${res.status}`);
+    }
+    const data = await res.json();
+    panel.innerHTML = type === 'poule'
+      ? _renderPouleAnalysis(data, assaults)
+      : _renderTableauAnalysis(data, assaults);
+    panel.classList.remove('hidden');
+    panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    // Stocker pour les callbacks
+    panel._analyzeData     = data;
+    panel._analyzeAssaults = assaults;
+  } catch (e) {
+    panel.innerHTML = `<div class="analyze-panel-head"><span class="analyze-panel-title">Analyse Claude</span><button class="analyze-panel-close" onclick="document.getElementById('d${cap}AnalyzePanel').classList.add('hidden')">×</button></div><div class="analyze-panel-body"><p style="color:var(--danger);font-size:.85rem">Erreur : ${esc(e.message)}</p></div>`;
+    panel.classList.remove('hidden');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = `${_ANALYZE_STAR} Analyser avec Claude`;
+  }
+}
+
+function _renderPouleAnalysis(data, assaults) {
+  const tireurs    = data.tireurs    || [];
+  const combats    = data.combats    || [];
+  const classement = data.classement || [];
+
+  const opts = tireurs.map(t => `<option value="${t.num}">${t.num}. ${esc(t.nom)}</option>`).join('');
+
+  let rankHTML = '';
+  if (classement.length) {
+    rankHTML = `<div class="analyze-classement"><div class="analyze-classement-title">Classement de poule</div>`;
+    classement.forEach(r => {
+      const gold = r.rang === 1 ? 'color:#c8960a;font-weight:800' : '';
+      rankHTML += `<div class="analyze-rank-row"><span class="analyze-rank-num" style="${gold}">${r.rang}</span><span style="flex:1">${esc(r.nom)}</span><span style="font-size:.75rem;color:var(--muted)">${r.V ?? '?'}V / ${r.D ?? '?'}D &nbsp;·&nbsp; ${r.TS ?? '?'}T / ${r.TR ?? '?'}T</span></div>`;
+    });
+    rankHTML += `</div>`;
+  }
+
+  return `<div class="analyze-panel-head">
+    <span class="analyze-panel-title">✦ Analyse Claude — Poule</span>
+    <button class="analyze-panel-close" onclick="document.getElementById('dPouleAnalyzePanel').classList.add('hidden')">×</button>
+  </div>
+  <div class="analyze-panel-body">
+    ${data.notes ? `<div class="analyze-notes">⚠ ${esc(data.notes)}</div>` : ''}
+    ${tireurs.length ? `<div class="analyze-tireur-select">
+      <label>Je suis :</label>
+      <select id="analyzePouleMeSelect" onchange="_renderPouleAnalysisCombats()">
+        <option value="">— sélectionner —</option>${opts}
+      </select>
+    </div>` : ''}
+    <div id="analyzePouleCombats"></div>
+    ${rankHTML}
+  </div>`;
+}
+
+function _renderPouleAnalysisCombats() {
+  const panel = document.getElementById('dPouleAnalyzePanel');
+  const data  = panel._analyzeData     || {};
+  const assaults = panel._analyzeAssaults || [];
+  const meNum = parseInt(document.getElementById('analyzePouleMeSelect')?.value || '0');
+  const container = document.getElementById('analyzePouleCombats');
+  if (!container) return;
+  if (!meNum) { container.innerHTML = ''; return; }
+
+  const tireurs = data.tireurs || [];
+  const combats = (data.combats || []).filter(c => c.num1 === meNum || c.num2 === meNum);
+
+  if (!combats.length) { container.innerHTML = '<p class="empty-msg" style="font-size:.82rem;padding:12px 0">Aucun combat trouvé pour ce tireur.</p>'; return; }
+
+  let html = '<div class="analyze-combats">';
+  combats.forEach(c => {
+    const isMeNum1 = c.num1 === meNum;
+    const advNum  = isMeNum1 ? c.num2 : c.num1;
+    const advObj  = tireurs.find(t => t.num === advNum);
+    const advName = advObj ? advObj.nom : `Tireur ${advNum}`;
+    const sm = isMeNum1 ? c.score1 : c.score2;
+    const sa = isMeNum1 ? c.score2 : c.score1;
+    const vic = (sm != null && sa != null) ? sm > sa : null;
+    const score = (sm != null && sa != null) ? `${sm} – ${sa}` : '—';
+    const rc = vic === true ? 'victory' : vic === false ? 'defeat' : 'unknown';
+    const rl = vic === true ? 'V' : vic === false ? 'D' : '?';
+
+    // Tentative de correspondance avec un assault existant (par nom d'adversaire)
+    const firstWord = advName.split(' ')[0].toUpperCase();
+    const match = assaults.find(a => a.adversaire && a.adversaire.toUpperCase().includes(firstWord));
+    const matchNote = match
+      ? `<span class="analyze-match-note">→ A${match.numero}</span>`
+      : `<span class="analyze-match-note" style="color:var(--muted)">non apparié</span>`;
+
+    const smJS = sm != null ? sm : 'null';
+    const saJS = sa != null ? sa : 'null';
+    const vicJS = vic != null ? vic : 'null';
+    const applyBtn = match
+      ? `<button class="analyze-apply-btn" onclick="applyPouleAnalysis(${match.id},${smJS},${saJS},${vicJS},'${esc(advName).replace(/'/g,"\\'")}')">Appliquer</button>`
+      : '';
+
+    html += `<div class="analyze-combat-row">
+      <span class="analyze-adv">${esc(advName)}</span>
+      <span class="analyze-score">${score}</span>
+      <span class="analyze-result ${rc}">${rl}</span>
+      ${matchNote}
+      ${applyBtn}
+    </div>`;
+  });
+  html += '</div>';
+  container.innerHTML = html;
+}
+
+async function applyPouleAnalysis(assaultId, sm, sa, vic, adv) {
+  try {
+    const saved = await api(`/api/assaults_poule/${assaultId}`, {
+      method: 'PATCH',
+      body: { adversaire: adv, score_moi: sm, score_adversaire: sa, victoire: vic },
+    });
+    // Mise à jour DOM de la ligne
+    const head = document.querySelector(`#pRow${assaultId} .assault-row-head`);
+    if (head) {
+      head.querySelector('.row-adv').innerHTML = esc(saved.adversaire) || '<em style="color:var(--muted)">—</em>';
+      const s = (saved.score_moi != null && saved.score_adversaire != null) ? `${saved.score_moi}–${saved.score_adversaire}` : '—';
+      head.querySelector('.row-score').textContent = s;
+      const b = head.querySelector('.result-badge');
+      const v = saved.victoire;
+      b.className = `result-badge ${v === true ? 'victory' : v === false ? 'defeat' : 'unknown'}`;
+      b.textContent = v === true ? 'V' : v === false ? 'D' : '?';
+    }
+    const advEl = document.getElementById(`pAdv${assaultId}`);
+    const smEl  = document.getElementById(`pSm${assaultId}`);
+    const saEl  = document.getElementById(`pSa${assaultId}`);
+    if (advEl) advEl.value = adv;
+    if (smEl) smEl.value = sm ?? '';
+    if (saEl) saEl.value = sa ?? '';
+    setFeedback('feedbackDetail', '✓ Assault mis à jour depuis la photo', 'ok');
+    setTimeout(() => setFeedback('feedbackDetail', '', ''), 2500);
+  } catch { alert('Erreur lors de l\'application.'); }
+}
+
+function _renderTableauAnalysis(data, assaults) {
+  const combats = data.combats || [];
+
+  let rows = '';
+  if (!combats.length) {
+    rows = '<p class="empty-msg" style="font-size:.82rem;padding:12px 0">Aucun combat extrait.</p>';
+  } else {
+    // Rassembler les noms uniques pour le sélecteur "Je suis..."
+    const namesSet = new Set();
+    combats.forEach(c => { if (c.tireur1) namesSet.add(c.tireur1); if (c.tireur2) namesSet.add(c.tireur2); });
+    const names = [...namesSet];
+    const opts = names.map(n => `<option value="${esc(n)}">${esc(n)}</option>`).join('');
+
+    rows = `<div class="analyze-tireur-select">
+      <label>Je suis :</label>
+      <select id="analyzeTableauMeSelect" onchange="_renderTableauAnalysisCombats()">
+        <option value="">— sélectionner —</option>${opts}
+      </select>
+    </div>
+    <div id="analyzeTableauCombats"></div>`;
+  }
+
+  return `<div class="analyze-panel-head">
+    <span class="analyze-panel-title">✦ Analyse Claude — Tableau</span>
+    <button class="analyze-panel-close" onclick="document.getElementById('dTableauAnalyzePanel').classList.add('hidden')">×</button>
+  </div>
+  <div class="analyze-panel-body">
+    ${data.notes ? `<div class="analyze-notes">⚠ ${esc(data.notes)}</div>` : ''}
+    ${rows}
+  </div>`;
+}
+
+function _renderTableauAnalysisCombats() {
+  const panel    = document.getElementById('dTableauAnalyzePanel');
+  const data     = panel._analyzeData     || {};
+  const assaults = panel._analyzeAssaults || [];
+  const me       = document.getElementById('analyzeTableauMeSelect')?.value || '';
+  const container = document.getElementById('analyzeTableauCombats');
+  if (!container) return;
+  if (!me) { container.innerHTML = ''; return; }
+
+  const combats = (data.combats || []).filter(c => c.tireur1 === me || c.tireur2 === me);
+  if (!combats.length) { container.innerHTML = '<p class="empty-msg" style="font-size:.82rem;padding:12px 0">Aucun combat trouvé pour ce tireur.</p>'; return; }
+
+  let html = '<div class="analyze-combats">';
+  combats.forEach(c => {
+    const isMeT1 = c.tireur1 === me;
+    const adv  = isMeT1 ? c.tireur2 : c.tireur1;
+    const sm   = isMeT1 ? c.score1 : c.score2;
+    const sa   = isMeT1 ? c.score2 : c.score1;
+    const vic  = c.vainqueur ? c.vainqueur === me : (sm != null && sa != null ? sm > sa : null);
+    const score = (sm != null && sa != null) ? `${sm} – ${sa}` : '—';
+    const rc   = vic === true ? 'victory' : vic === false ? 'defeat' : 'unknown';
+    const rl   = vic === true ? 'V' : vic === false ? 'D' : '?';
+    const label = tourLabel(c.tour);
+
+    const match = assaults.find(a => a.tour === c.tour);
+    const matchNote = match
+      ? `<span class="analyze-match-note">→ ${label}</span>`
+      : `<span class="analyze-match-note" style="color:var(--muted)">tour non trouvé</span>`;
+
+    const smJS  = sm  != null ? sm  : 'null';
+    const saJS  = sa  != null ? sa  : 'null';
+    const vicJS = vic != null ? vic : 'null';
+    const advSafe = (adv || '').replace(/'/g, "\\'");
+    const applyBtn = match
+      ? `<button class="analyze-apply-btn" onclick="applyTableauAnalysis(${match.id},${smJS},${saJS},${vicJS},'${advSafe}')">Appliquer</button>`
+      : '';
+
+    html += `<div class="analyze-combat-row">
+      <span style="font-size:.72rem;font-weight:800;color:var(--primary);min-width:72px;flex-shrink:0">${label}</span>
+      <span class="analyze-adv">${esc(adv) || '—'}</span>
+      <span class="analyze-score">${score}</span>
+      <span class="analyze-result ${rc}">${rl}</span>
+      ${matchNote}
+      ${applyBtn}
+    </div>`;
+  });
+  html += '</div>';
+  container.innerHTML = html;
+}
+
+async function applyTableauAnalysis(assaultId, sm, sa, vic, adv) {
+  try {
+    const saved = await api(`/api/assaults_tableau/${assaultId}`, {
+      method: 'PATCH',
+      body: { adversaire: adv, score_moi: sm, score_adversaire: sa, victoire: vic },
+    });
+    const head = document.querySelector(`#tRow${assaultId} .assault-row-head`);
+    if (head) {
+      head.querySelector('.row-adv').innerHTML = esc(saved.adversaire) || '<em style="color:var(--muted)">—</em>';
+      const s = (saved.score_moi != null && saved.score_adversaire != null) ? `${saved.score_moi}–${saved.score_adversaire}` : '—';
+      head.querySelector('.row-score').textContent = s;
+      const b = head.querySelector('.result-badge');
+      b.className = `result-badge ${saved.victoire ? 'victory' : 'defeat'}`;
+      b.textContent = saved.victoire ? 'V' : 'D';
+    }
+    const advEl = document.getElementById(`tAdv${assaultId}`);
+    const smEl  = document.getElementById(`tSm${assaultId}`);
+    const saEl  = document.getElementById(`tSa${assaultId}`);
+    if (advEl) advEl.value = adv;
+    if (smEl) smEl.value = sm ?? '';
+    if (saEl) saEl.value = sa ?? '';
+    setFeedback('feedbackDetail', '✓ Assault tableau mis à jour depuis la photo', 'ok');
+    setTimeout(() => setFeedback('feedbackDetail', '', ''), 2500);
+  } catch { alert('Erreur lors de l\'application.'); }
 }
 
 async function saveCompInfo() {

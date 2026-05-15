@@ -395,12 +395,109 @@ select.field-input { cursor: pointer; }
 .btn-photo-sm:hover { background: var(--primary); color: #fff; }
 
 /* ── Detail section title ────────────────────────────────── */
+.section-header {
+  display: flex; align-items: center; gap: 8px;
+  margin-bottom: 12px; padding-bottom: 6px;
+  border-bottom: 1px solid var(--border);
+}
+.section-header .detail-section-title { margin-bottom: 0; padding-bottom: 0; border-bottom: none; flex: 1; }
+
 .detail-section-title {
   font-size: .72rem; font-weight: 800; text-transform: uppercase;
   letter-spacing: .08em; color: var(--muted);
   margin-bottom: 12px; padding-bottom: 6px;
   border-bottom: 1px solid var(--border);
 }
+
+/* ── Badge photo dans l'en-tête de section ───────────────── */
+.photo-section-badge {
+  display: flex; align-items: center; gap: 5px;
+  background: #e8f4fd; border: 1px solid #b8d4e8; border-radius: 20px;
+  padding: 3px 10px 3px 4px; text-decoration: none; flex-shrink: 0;
+  transition: background .15s;
+}
+.photo-section-badge:hover { background: #d0e8f8; }
+.photo-section-badge img {
+  width: 22px; height: 22px; object-fit: cover;
+  border-radius: 5px; border: 1px solid #b8d4e8;
+}
+.photo-section-badge span { font-size: .72rem; font-weight: 700; color: var(--primary); }
+
+/* ── Bouton Analyser avec Claude ────────────────────────── */
+.btn-analyze {
+  display: flex; align-items: center; gap: 6px;
+  padding: 7px 13px; border-radius: 20px;
+  background: linear-gradient(135deg, #5b2d8e 0%, #8b5cf6 100%);
+  color: #fff; border: none; font-family: var(--font);
+  font-size: .78rem; font-weight: 700; cursor: pointer;
+  transition: opacity .2s; white-space: nowrap; flex-shrink: 0;
+}
+.btn-analyze:hover { opacity: .85; }
+.btn-analyze:disabled { opacity: .45; cursor: default; }
+
+/* ── Panneau résultats analyse ──────────────────────────── */
+.analyze-panel { border-radius: var(--radius-sm); overflow: hidden; margin-top: 12px; }
+.analyze-panel-head {
+  display: flex; align-items: center; justify-content: space-between;
+  background: linear-gradient(135deg, #5b2d8e 0%, #8b5cf6 100%);
+  padding: 10px 14px;
+}
+.analyze-panel-title { font-size: .75rem; font-weight: 800; text-transform: uppercase; letter-spacing: .07em; color: #fff; }
+.analyze-panel-close {
+  width: 22px; height: 22px; border-radius: 50%; border: none; cursor: pointer;
+  background: rgba(255,255,255,.25); color: #fff; font-size: 1rem; line-height: 1;
+  display: flex; align-items: center; justify-content: center;
+}
+.analyze-panel-body { padding: 12px 14px; background: #faf7ff; border: 1.5px solid #c4b5f4; border-top: none; border-radius: 0 0 var(--radius-sm) var(--radius-sm); }
+
+.analyze-tireur-select {
+  display: flex; align-items: center; gap: 8px;
+  margin-bottom: 12px; padding-bottom: 12px;
+  border-bottom: 1px solid var(--border); flex-wrap: wrap;
+}
+.analyze-tireur-select label { font-size: .8rem; font-weight: 700; color: var(--primary); white-space: nowrap; }
+.analyze-tireur-select select {
+  flex: 1; min-width: 160px; padding: 5px 10px;
+  border: 1.5px solid var(--border); border-radius: 8px;
+  font-family: var(--font); font-size: .82rem;
+  background: var(--card); color: var(--text);
+}
+
+.analyze-combats { display: flex; flex-direction: column; gap: 6px; }
+.analyze-combat-row {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  padding: 8px 10px; background: var(--card);
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+}
+.analyze-adv { flex: 1; font-size: .88rem; font-weight: 600; min-width: 80px; }
+.analyze-score { font-size: .85rem; font-weight: 700; color: var(--muted); white-space: nowrap; }
+.analyze-result { padding: 2px 8px; border-radius: 20px; font-size: .72rem; font-weight: 800; white-space: nowrap; }
+.analyze-result.victory { background: #d4edda; color: var(--victory); }
+.analyze-result.defeat  { background: #f8d7da; color: var(--defeat); }
+.analyze-result.unknown { background: #e2e8f0; color: var(--muted); }
+.analyze-match-note { font-size: .68rem; color: var(--muted); font-style: italic; white-space: nowrap; }
+.analyze-apply-btn {
+  padding: 4px 12px; background: var(--primary); color: #fff;
+  border: none; border-radius: 12px; font-family: var(--font);
+  font-size: .75rem; font-weight: 700; cursor: pointer; white-space: nowrap;
+}
+.analyze-apply-btn:hover { background: var(--primary-d); }
+
+.analyze-notes {
+  margin-bottom: 10px; padding: 8px 10px;
+  background: #fff8e1; border: 1px solid #ffe082;
+  border-radius: var(--radius-sm); font-size: .78rem; color: #7a5c00;
+}
+.analyze-classement { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
+.analyze-classement-title {
+  font-size: .7rem; font-weight: 800; text-transform: uppercase;
+  letter-spacing: .06em; color: var(--muted); margin-bottom: 6px;
+}
+.analyze-rank-row { display: flex; align-items: center; gap: 8px; font-size: .8rem; padding: 4px 0; }
+.analyze-rank-num { font-weight: 800; color: var(--primary); min-width: 22px; text-align: center; }
+
+/* ── PC : detail-photo-row avec wrap ───────────────────────── */
+.detail-photo-row { flex-wrap: wrap; }
 
 /* ── Assault rows (collapsibles dans la vue détail) ──────── */
 .assault-row {

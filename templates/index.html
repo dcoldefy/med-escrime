@@ -421,7 +421,13 @@
 
     <!-- Assaults de poule -->
     <div class="form-card hidden" id="dPouleSection" style="margin-bottom:12px">
-      <div class="detail-section-title">Poule</div>
+      <div class="section-header">
+        <div class="detail-section-title">Poule</div>
+        <a class="photo-section-badge hidden" id="dPoulePhotoBadge" href="#dPhotosSection">
+          <img id="dPoulePhotoThumb" src="" alt="" />
+          <span id="dPoulePhotoCount"></span>
+        </a>
+      </div>
       <div id="dPouleAssaults"></div>
       <div class="detail-photo-row">
         <input type="file" id="dPhotoPouleInput" accept="image/*" style="display:none" />
@@ -429,13 +435,24 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21,15 16,10 5,21"/></svg>
           Ajouter une photo (poule)
         </button>
+        <button class="btn-analyze hidden" id="btnAnalyzePoule" onclick="analyzeWithClaude(S.detailComp.id,'poule')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg>
+          Analyser avec Claude
+        </button>
         <span class="photo-status" id="dPhotoPouleStatus"></span>
       </div>
+      <div class="analyze-panel hidden" id="dPouleAnalyzePanel"></div>
     </div>
 
     <!-- Assaults de tableau -->
     <div class="form-card hidden" id="dTableauSection" style="margin-bottom:12px">
-      <div class="detail-section-title">Tableau</div>
+      <div class="section-header">
+        <div class="detail-section-title">Tableau</div>
+        <a class="photo-section-badge hidden" id="dTableauPhotoBadge" href="#dPhotosSection">
+          <img id="dTableauPhotoThumb" src="" alt="" />
+          <span id="dTableauPhotoCount"></span>
+        </a>
+      </div>
       <div id="dTableauAssaults"></div>
       <div class="detail-photo-row">
         <input type="file" id="dPhotoTableauInput" accept="image/*" style="display:none" />
@@ -443,8 +460,13 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21,15 16,10 5,21"/></svg>
           Ajouter une photo (tableau)
         </button>
+        <button class="btn-analyze hidden" id="btnAnalyzeTableau" onclick="analyzeWithClaude(S.detailComp.id,'tableau')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg>
+          Analyser avec Claude
+        </button>
         <span class="photo-status" id="dPhotoTableauStatus"></span>
       </div>
+      <div class="analyze-panel hidden" id="dTableauAnalyzePanel"></div>
     </div>
 
     <!-- Notes / Analyse -->
